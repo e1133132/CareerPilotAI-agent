@@ -1,0 +1,6 @@
+{"id":"jd-001","title":"Junior Data Analyst","description":"Work with SQL and dashboards to analyze business metrics. Build reports, collaborate with stakeholders, and communicate insights.","skills_required":["SQL","Excel","Data visualization","Statistics","Python"]}
+{"id":"jd-002","title":"Machine Learning Engineer (Entry)","description":"Build and deploy ML models, work with Python, scikit-learn, and cloud services. Maintain pipelines and monitor models.","skills_required":["Python","Machine learning","Model evaluation","Git","APIs","Cloud fundamentals"]}
+{"id":"jd-003","title":"Frontend Developer (React)","description":"Develop UI features using React and TypeScript. Work with REST APIs, state management, and modern CSS.","skills_required":["JavaScript","TypeScript","React","HTML","CSS","REST APIs"]}
+{"id":"jd-004","title":"Backend Developer (Python)","description":"Build backend services in Python. Design APIs, work with databases, and write tests. Familiar with Docker is a plus.","skills_required":["Python","REST APIs","Databases","Testing","Docker"]}
+{"id":"jd-005","title":"DevOps Engineer (Junior)","description":"Support CI/CD pipelines, containerization, and basic cloud operations. Monitor services and automate tasks.","skills_required":["Linux","Docker","CI/CD","Scripting","Cloud fundamentals"]}
+
