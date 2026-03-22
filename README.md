@@ -37,11 +37,12 @@ python -m uvicorn api:app --host 0.0.0.0 --port 8080 --reload
 - Resume Analysis Agent: extracts skills/education/experience into a structured profile + evidence.
 - Job Matching Agent: ranks jobs from a local dataset (semantic matching when possible).
 - Skill Gap Agent: compares profile vs job requirements to identify gaps (prioritized).
-- Study Planning Agent: produces a learning roadmap with timeline + project ideas.
+- Study Planning Agent: produces a learning roadmap with timeline + project ideas (optional **RAG** from `data/learning_resources.jsonl`).
 
 ## Data
 
 - `data/jobs.jsonl` contains sample job descriptions you can extend.
+- `data/learning_resources.jsonl` contains learning snippets for **study plan RAG** (retrieval + LLM). Add lines to expand the knowledge base. Override path with env `LEARNING_RESOURCES_PATH`. Tune `STUDY_PLAN_RAG_TOP_K` (default `5`).
 
 ## API endpoint
 
