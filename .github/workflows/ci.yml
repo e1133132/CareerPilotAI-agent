@@ -79,7 +79,7 @@ jobs:
   docker-build-push:
     name: Docker Build & Push
     runs-on: ubuntu-latest
-    needs: test
+    needs: [integration-test, lint-test, sast-test]
     steps:
       - uses: actions/checkout@v4
 
