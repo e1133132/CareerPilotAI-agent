@@ -46,6 +46,12 @@ Run container:
 docker run --rm -p 8080:8080 --env-file .env careerpilot-ai:local
 ```
 
+Or with Docker Compose:
+
+```sh
+docker compose up --build
+```
+
 ## What it does (agents)
 
 - Resume Analysis Agent: extracts skills/education/experience into a structured profile + evidence.
