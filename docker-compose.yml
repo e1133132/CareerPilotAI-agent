@@ -1,0 +1,24 @@
+name: careerpilot-ai
+
+services:
+  careerpilot-ai:
+    build: .
+    container_name: careerpilot-ai
+    ports:
+      - "8080:8080"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_TEMPERATURE=${OPENAI_TEMPERATURE:-0}
+      - OPENAI_EMBEDDING_MODEL=${OPENAI_EMBEDDING_MODEL:-text-embedding-3-small}
+      - OPENAI_MODEL_RESUME_ANALYSIS=${OPENAI_MODEL_RESUME_ANALYSIS:-gpt-5-nano}
+      - OPENAI_MODEL_JOB_MATCHING=${OPENAI_MODEL_JOB_MATCHING:-gpt-5-nano}
+      - OPENAI_MODEL_SKILL_GAP=${OPENAI_MODEL_SKILL_GAP:-gpt-5-nano}
+      - OPENAI_MODEL_STUDY_PLANNING=${OPENAI_MODEL_STUDY_PLANNING:-gpt-5-nano}
+      - STUDY_PLAN_RAG_TOP_K=${STUDY_PLAN_RAG_TOP_K:-5}
+      - SERVER_PORT=8080
+    networks:
+      - careerpilot-network
+    restart: unless-stopped
+
+networks:
+  careerpilot-network:
