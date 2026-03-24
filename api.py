@@ -3,13 +3,14 @@ from __future__ import annotations
 from io import BytesIO
 
 from dotenv import load_dotenv
-load_dotenv(override=True)
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pypdf import PdfReader  # type: ignore
 
 from agents import orchestrator, participant, summarizer
 from config import settings
+
+load_dotenv(override=True)
 
 
 app = FastAPI(title=settings.APP_NAME)

@@ -32,6 +32,20 @@ Run API server:
 python -m uvicorn api:app --host 0.0.0.0 --port 8080 --reload
 ```
 
+## Docker
+
+Build image:
+
+```sh
+docker build -t careerpilot-ai:local .
+```
+
+Run container:
+
+```sh
+docker run --rm -p 8080:8080 --env-file .env careerpilot-ai:local
+```
+
 ## What it does (agents)
 
 - Resume Analysis Agent: extracts skills/education/experience into a structured profile + evidence.
