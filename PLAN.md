@@ -65,6 +65,18 @@
   - 增加本地验证步骤、性能对比记录、README 部署说明。
   - 确认组员“仅运行项目”可完成自动初始化和本地测试。
 
+## 8) 简历分析提速（LLM输入与检索性能）
+### 目标
+- [x] 降低每次请求非必要控制台 IO（`agents/resume_analysis.py`、`tools/resume_io.py`）
+- [x] Qdrant 失败/无结果时默认走 `keyword` fallback（避免逐条 embedding 的 O(N) 路径）
+- [x] 缓存 `data/jobs.jsonl` 与 `data/learning_resources.jsonl` 的解析结果（减少磁盘 IO）
+- [x] 对发给大模型的输入长度做配置化截断（降低 LLM 延迟/超时概率）
+- [x] 为 OpenAI 请求增加 `request_timeout` 与 `max_retries`（默认 0 重试）
+
+### 可衡量成功标准
+- [ ] 以同一份简历连续调用 `/api/careerpilot/run` 10 次，平均耗时较改造前下降明显（目标：40%+）
+- [ ] 低 Qdrant 可用性/失败场景下不再出现“极慢逐条 embedding 回退”（超时率下降）
+
 ---
 
 ## AI 执行规则（每次改代码前必须遵守）

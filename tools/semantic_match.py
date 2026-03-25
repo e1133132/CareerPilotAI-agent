@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import Any
 
 import math
@@ -51,6 +52,10 @@ def rank_jobs_semantic(
         return []
 
     # Prefer Qdrant persisted vector search when available.
+    # If Qdrant is empty/failed, default to keyword fallback (avoid local O(N) embedding).
+    allow_local_embedding_fallback = (
+        os.getenv("ALLOW_LOCAL_EMBEDDING_FALLBACK", "false").lower() == "true"
+    )
     try:
         from .vector_store_qdrant import search_jobs as qdrant_search_jobs
 
@@ -60,8 +65,19 @@ def rank_jobs_semantic(
     except Exception as e:
         import warnings
 
-        warnings.warn(f"Qdrant job search failed, using local embedding path: {e}", stacklevel=1)
+        mode = "local embedding" if allow_local_embedding_fallback else "keyword fallback"
+        warnings.warn(f"Qdrant job search failed, using {mode}: {e}", stacklevel=1)
 
+    # Qdrant may be unavailable or return empty results; skip the very slow local embedding path by default.
+    if (not allow_local_embedding_fallback) or embed_fn is None:
+        scored = [(float(_keyword_score(query, j)), j) for j in jobs]
+        scored.sort(key=lambda x: x[0], reverse=True)
+        return [
+            {**j, "score": s, "score_method": "keyword"}
+            for s, j in scored[:top_k]
+        ]
+
+    # Optional slow path: local embedding cosine similarity for each job.
     if embed_fn is None:
         scored = [(float(_keyword_score(query, j)), j) for j in jobs]
         scored.sort(key=lambda x: x[0], reverse=True)

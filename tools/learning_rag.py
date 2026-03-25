@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import math
+import os
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -36,8 +38,9 @@ def _keyword_score(query: str, text: str) -> float:
     return hits / max(1, len([w for w in q if len(w) > 2]))
 
 
-def load_learning_resources(dataset_path: str | Path) -> list[dict[str, Any]]:
-    p = Path(dataset_path)
+@lru_cache(maxsize=4)
+def _load_learning_resources_cached(dataset_path_resolved: str) -> list[dict[str, Any]]:
+    p = Path(dataset_path_resolved)
     if not p.exists():
         return []
     out: list[dict[str, Any]] = []
@@ -47,6 +50,11 @@ def load_learning_resources(dataset_path: str | Path) -> list[dict[str, Any]]:
             continue
         out.append(json.loads(line))
     return out
+
+
+def load_learning_resources(dataset_path: str | Path) -> list[dict[str, Any]]:
+    p = Path(dataset_path).resolve()
+    return _load_learning_resources_cached(str(p))
 
 
 def _item_text(item: dict[str, Any]) -> str:
@@ -92,7 +100,7 @@ def retrieve_learning_context(
     *,
     query: str,
     resources: list[dict[str, Any]],
-    embed_fn: Any,
+    embed_fn: Any | None,
     top_k: int = 5,
     dataset_path: str | None = None,
 ) -> list[dict[str, Any]]:
@@ -103,6 +111,10 @@ def retrieve_learning_context(
     top_k = max(1, int(top_k))
     if not resources:
         return []
+
+    allow_local_embedding_fallback = (
+        os.getenv("ALLOW_LOCAL_EMBEDDING_FALLBACK", "false").lower() == "true"
+    )
 
     # Prefer Qdrant persisted vector search when available.
     try:
@@ -119,9 +131,11 @@ def retrieve_learning_context(
     except Exception as e:
         import warnings
 
-        warnings.warn(f"Qdrant learning search failed, using local embedding path: {e}", stacklevel=1)
+        mode = "local embedding" if allow_local_embedding_fallback else "keyword fallback"
+        warnings.warn(f"Qdrant learning search failed, using {mode}: {e}", stacklevel=1)
 
-    if embed_fn is None:
+    # Qdrant may be unavailable or return empty results; skip the very slow local embedding path by default.
+    if (not allow_local_embedding_fallback) or embed_fn is None:
         scored: list[tuple[float, dict[str, Any]]] = []
         for item in resources:
             text = _item_text(item)

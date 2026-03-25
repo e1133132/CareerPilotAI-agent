@@ -67,8 +67,15 @@ Output ONLY JSON:
         {"candidate_profile": profile, "resume_evidence": evidence, "target_job": top_job},
         ensure_ascii=False,
     )
-    llm = ChatOpenAI(model=model, temperature=settings.OPENAI_TEMPERATURE)
-    resp = llm.invoke([SystemMessage(content=system), HumanMessage(content=user[:20000])])
+    llm = ChatOpenAI(
+        model=model,
+        temperature=settings.OPENAI_TEMPERATURE,
+        request_timeout=settings.OPENAI_REQUEST_TIMEOUT_SECONDS,
+        max_retries=settings.OPENAI_MAX_RETRIES,
+    )
+    resp = llm.invoke(
+        [SystemMessage(content=system), HumanMessage(content=user[: settings.SKILL_GAP_USER_MAX_CHARS])]
+    )
     raw = str(resp.content).strip()
 
     payload = safe_json_loads(raw)

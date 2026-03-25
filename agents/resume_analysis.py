@@ -6,6 +6,7 @@ import json
 import re
 from config import settings
 from .llm_utils import extract_json_block, safe_json_loads
+from utils import debug
 
 AGENT_ID = "resume_analysis"
 AGENT_NAME = "Resume Analysis Agent"
@@ -27,9 +28,9 @@ def run(state: dict, *, model: str = DEFAULT_MODEL) -> dict:
     try:
         from langchain_core.messages import HumanMessage, SystemMessage
         from langchain_openai import ChatOpenAI
-        print("[resume_analysis] LangChain imports OK")
+        debug("LangChain imports OK", "resume_analysis")
     except ModuleNotFoundError as e:
-        print("[resume_analysis] LangChain imports failed:", str(e))
+        debug(f"LangChain imports failed: {str(e)}", "resume_analysis")
 
         return {
             "candidate_profile": profile,
@@ -122,29 +123,28 @@ JSON SCHEMA:
 """
 
     api_key = settings.OPENAI_API_KEY or os.getenv("OPENAI_API_KEY")
-    print("[resume_analysis] OPENAI_API_KEY exists:", bool(api_key))
-    print("[resume_analysis] resume_text preview:")
-    print((resume_text or "")[:2000])
+    debug(f"OPENAI_API_KEY exists: {bool(api_key)}", "resume_analysis")
+    debug(f"resume_text preview: {(resume_text or '')[:2000]}", "resume_analysis")
 
     llm = ChatOpenAI(
         model=model,
         temperature=0,
         api_key=api_key,
+        request_timeout=settings.OPENAI_REQUEST_TIMEOUT_SECONDS,
+        max_retries=settings.OPENAI_MAX_RETRIES,
         model_kwargs={"response_format": {"type": "json_object"}},
     )
 
     try:
         resp = llm.invoke([
             SystemMessage(content=system),
-            HumanMessage(content=resume_text[:20000]),
+            HumanMessage(content=resume_text[: settings.RESUME_ANALYSIS_RESUME_TEXT_MAX_CHARS]),
         ])
     except Exception as e:
-        print("[resume_analysis] LLM invoke failed:", str(e))
+        debug(f"LLM invoke failed: {str(e)}", "resume_analysis")
         raise
 
-    print("[resume_analysis] resp.content type:", type(resp.content))
-    print("[resume_analysis] raw content:")
-    print(resp.content)
+    debug(f"resp.content type: {type(resp.content)}", "resume_analysis")
 
     raw = resp.content if isinstance(resp.content, str) else json.dumps(resp.content, ensure_ascii=False)
     raw = raw.strip()
@@ -152,7 +152,7 @@ JSON SCHEMA:
     payload = safe_json_loads(raw)
     if payload is None:
         jb = extract_json_block(raw)
-        print("[resume_analysis] extracted json block:", jb)
+        debug(f"extracted json block: {jb}", "resume_analysis")
         payload = safe_json_loads(jb or "")
 
     if payload is None:
@@ -174,8 +174,7 @@ JSON SCHEMA:
             "raw": raw,
         }
 
-    print("[resume_analysis] final payload:")
-    print(json.dumps(payload, ensure_ascii=False, indent=2))
+    debug(f"final payload: {json.dumps(payload, ensure_ascii=False, indent=2)}", "resume_analysis")
 
     profile = payload.get("profile") or {}
     evidence = payload.get("evidence") or {}
