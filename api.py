@@ -9,6 +9,8 @@ from pypdf import PdfReader  # type: ignore
 
 from agents import orchestrator, participant, summarizer
 from config import settings
+from agents.llm_utils import get_embed_fn
+from tools.vector_store_qdrant import warmup_qdrant_indexes
 
 load_dotenv(override=True)
 
@@ -22,6 +24,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.on_event("startup")
+def _startup_warmup() -> None:
+    """
+    Best-effort: initialize Qdrant indexes early to reduce first-request latency.
+    """
+    warmup_qdrant_indexes(get_embed_fn())
 
 
 def _extract_pdf_text(raw_bytes: bytes) -> str:

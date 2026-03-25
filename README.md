@@ -52,6 +52,12 @@ Or with Docker Compose:
 docker compose up --build
 ```
 
+This now starts both app + Qdrant by default. The first run will auto-index:
+- `data/jobs.jsonl`
+- `data/learning_resources.jsonl`
+
+Subsequent runs reuse persisted vectors from Docker volume (`qdrant_storage`).
+
 ## What it does (agents)
 
 - Resume Analysis Agent: extracts skills/education/experience into a structured profile + evidence.
@@ -63,6 +69,16 @@ docker compose up --build
 
 - `data/jobs.jsonl` contains sample job descriptions you can extend.
 - `data/learning_resources.jsonl` contains learning snippets for **study plan RAG** (retrieval + LLM). Add lines to expand the knowledge base. Override path with env `LEARNING_RESOURCES_PATH`. Tune `STUDY_PLAN_RAG_TOP_K` (default `5`).
+
+## Qdrant Vector Search
+
+- Enabled by default: `QDRANT_ENABLED=true`
+- App-side URL default:
+  - local run: `http://localhost:6333`
+  - docker-compose: `http://qdrant:6333`
+- Optional local auto-start (non-container run): `QDRANT_AUTO_START=true`
+  - If Qdrant is unreachable, app will try `docker compose up -d qdrant` (best effort).
+- If Qdrant cannot be used, retrieval falls back to in-process keyword/embedding logic.
 
 ## API endpoint
 
