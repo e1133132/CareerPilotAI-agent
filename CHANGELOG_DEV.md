@@ -4,6 +4,27 @@
 
 ---
 
+## 2026-03-25 16:31（本地时间） | 任务：PLAN-STAGE-PARTIAL-RETURN
+- **类型**：update
+- **改动文件**：
+  - `api.py`
+  - `tests/integration/test_api.py`
+  - （前端）`CareerPilotAI-frontend/app.py`
+  - （前端）`CareerPilotAI-frontend/static/js/app.js`
+- **改动内容**：
+  - 后端新增 `POST /api/careerpilot/run_partial`：仅执行到 `skill_gap` 并快速返回（`study_plan=null`），同时返回 `run_id`。
+  - 后端新增 `GET /api/careerpilot/result/{run_id}`：用于前端轮询获取最终 `study_plan`（`plan_status: pending|done|error`）。
+  - 前端（Flask 代理）新增转发：`/api/careerpilot/run_partial` 与 `/api/careerpilot/result/<run_id>`。
+  - 前端（JS）改为先调用 `run_partial` 渲染 profile/jobs/gaps，并在 plan 生成期间显示占位，plan 完成后自动刷新 Study Plan 卡片。
+- **改动原因**：
+  - `stage=plan`（study planning）耗时较长时会阻塞整体 UI；分阶段返回可显著提升首屏可用性与用户体验。
+- **验证方式**：
+  - `python -m compileall -q .`：通过（后端）
+  - `python -m pytest -q`：通过（后端）
+  - `python -m py_compile CareerPilotAI-frontend/app.py`：通过（前端代理）
+- **影响范围**：
+  - 新增接口，不影响原 `POST /api/careerpilot/run` 兼容性；前端需切换为分阶段请求方式以获得体验提升。
+
 ## 2026-03-25 15:38（本地时间） | 任务：RESUME-OPENAI-TIMEOUT
 - **类型**：update
 - **改动文件**：
