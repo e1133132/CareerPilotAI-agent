@@ -196,9 +196,14 @@ Output ONLY JSON:
         f"{rag_block}\n\n"
         "CANDIDATE_AND_GAPS_JSON:\n"
         f"{payload_json}"
-    )[:50000]
+    )[: settings.STUDY_PLANNING_USER_MAX_CHARS]
 
-    llm = ChatOpenAI(model=model, temperature=settings.OPENAI_TEMPERATURE)
+    llm = ChatOpenAI(
+        model=model,
+        temperature=settings.OPENAI_TEMPERATURE,
+        request_timeout=settings.OPENAI_REQUEST_TIMEOUT_SECONDS,
+        max_retries=settings.OPENAI_MAX_RETRIES,
+    )
     resp = llm.invoke([SystemMessage(content=system), HumanMessage(content=user)])
     raw = str(resp.content).strip()
 

@@ -8,12 +8,22 @@ class Settings:
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     OPENAI_TEMPERATURE: float = float(os.getenv("OPENAI_TEMPERATURE", "0"))
     OPENAI_EMBEDDING_MODEL: str = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
+    OPENAI_REQUEST_TIMEOUT_SECONDS: float = float(os.getenv("OPENAI_REQUEST_TIMEOUT_SECONDS", "90"))
+    # Default to 0 retries to prevent retries from multiplying perceived "timeout" duration.
+    OPENAI_MAX_RETRIES: int = int(os.getenv("OPENAI_MAX_RETRIES", "0"))
 
     # Per-agent model assignments
     OPENAI_MODEL_RESUME_ANALYSIS: str = os.getenv("OPENAI_MODEL_RESUME_ANALYSIS", "gpt-5-nano")
     OPENAI_MODEL_JOB_MATCHING: str = os.getenv("OPENAI_MODEL_JOB_MATCHING", "gpt-5-nano")
     OPENAI_MODEL_SKILL_GAP: str = os.getenv("OPENAI_MODEL_SKILL_GAP", "gpt-5-nano")
     OPENAI_MODEL_STUDY_PLANNING: str = os.getenv("OPENAI_MODEL_STUDY_PLANNING", "gpt-5-nano")
+
+    # Reduce input size to lower latency and avoid request timeouts.
+    RESUME_ANALYSIS_RESUME_TEXT_MAX_CHARS: int = int(
+        os.getenv("RESUME_ANALYSIS_RESUME_TEXT_MAX_CHARS", "12000")
+    )
+    SKILL_GAP_USER_MAX_CHARS: int = int(os.getenv("SKILL_GAP_USER_MAX_CHARS", "15000"))
+    STUDY_PLANNING_USER_MAX_CHARS: int = int(os.getenv("STUDY_PLANNING_USER_MAX_CHARS", "30000"))
 
     # Study plan RAG (retrieval from data/learning_resources.jsonl)
     STUDY_PLAN_RAG_TOP_K: int = int(os.getenv("STUDY_PLAN_RAG_TOP_K", "5"))

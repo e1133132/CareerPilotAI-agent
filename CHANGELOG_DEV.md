@@ -4,6 +4,48 @@
 
 ---
 
+## 2026-03-25 15:38（本地时间） | 任务：RESUME-OPENAI-TIMEOUT
+- **类型**：update
+- **改动文件**：
+  - `config.py`
+- **改动内容**：
+  - 将 `OPENAI_REQUEST_TIMEOUT_SECONDS` 默认值从 `30` 提升到 `90`，避免 `resume_analysis` 等 OpenAI 调用出现 `httpx.ReadTimeout / openai.APITimeoutError` 进而导致 `/api/careerpilot/run` 返回 `500 Internal Server Error`。
+- **改动原因**：
+  - 你当前日志显示在 `agents/resume_analysis.py` 的 `llm.invoke()` 处触发读取超时。
+- **验证方式**：
+  - `python -m compileall -q .`：通过
+- **影响范围**：
+  - 超时更不易触发，但最坏情况下单次接口等待时间上限会相应增加（仍可通过 `.env` 覆盖 `OPENAI_REQUEST_TIMEOUT_SECONDS`）。
+- **后续事项**：
+  - 用同一份简历连续请求，观察是否仍出现超时/500；如仍慢，再结合进一步缩短 LLM 输出长度或启用降级策略。
+
+## 2026-03-25 14:45（本地时间） | 任务：RESUME-SPEEDUP
+- **类型**：update
+- **改动文件**：
+  - `agents/resume_analysis.py`
+  - `agents/skill_gap.py`
+  - `agents/study_planning.py`
+  - `tools/resume_io.py`
+  - `tools/semantic_match.py`
+  - `tools/learning_rag.py`
+  - `tools/jobs_dataset.py`
+  - `config.py`
+- **改动内容**：
+  - `resume_analysis.py`/`resume_io.py`：移除无条件大段 `print`，改为 `debug()`（仅在 `DEBUG=true` 时输出），减少每次请求控制台 IO。
+  - `semantic_match.py`/`learning_rag.py`：默认在 Qdrant 检索失败/空结果时走 `keyword` fallback，避免逐条本地 embedding 的 O(N) 慢路径；提供 `ALLOW_LOCAL_EMBEDDING_FALLBACK=true` 作为可选慢路径开关。
+  - `jobs_dataset.py`：对 `load_jobs()` 增加按路径缓存（`lru_cache`）。
+  - `learning_rag.py`：对 `load_learning_resources()` 增加按路径缓存（`lru_cache`）。
+  - `config.py` + 各 LLM agent：增加 LLM 输入长度配置，并为 OpenAI 调用增加 `request_timeout` 与 `max_retries`（默认 0 重试），降低超时概率。
+- **改动原因**：
+  - 每次请求都慢/易超时通常由“无条件大日志 IO”“Qdrant 不可用时回退到逐条 embedding”“重复读大文件”“LLM 输入过长 + 无明确超时”共同放大。
+- **验证方式**：
+  - `python -m compileall -q .`：无语法错误
+  - IDE linter：无 linter errors
+- **影响范围**：
+  - 仅影响性能与可观测性；输出字段结构保持兼容（由于输入截断，抽取质量可能略受影响）。
+- **后续事项**：
+  - 按 `PLAN.md` 验证方式进行压测：同一份简历连续调用 10 次，统计平均耗时与超时率，确认性能提升是否达到目标。
+
 ## 2026-03-25 12:30（本地时间） | 任务：QDRANT-QUERY-POINTS
 - **类型**：fix
 - **改动文件**：

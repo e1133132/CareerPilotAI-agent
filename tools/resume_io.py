@@ -46,7 +46,6 @@ def load_resume_text(path: str) -> str:
             raise ValueError(
                 "No extractable text found in the PDF. If your resume is scanned (images), OCR is required."
             )
-        print(resume_text)
         return resume_text
 
     try:
