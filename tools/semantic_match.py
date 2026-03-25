@@ -50,6 +50,18 @@ def rank_jobs_semantic(
     if not jobs:
         return []
 
+    # Prefer Qdrant persisted vector search when available.
+    try:
+        from .vector_store_qdrant import search_jobs as qdrant_search_jobs
+
+        qdrant_hits = qdrant_search_jobs(query=query, top_k=top_k, embed_fn=embed_fn)
+        if qdrant_hits:
+            return qdrant_hits
+    except Exception as e:
+        import warnings
+
+        warnings.warn(f"Qdrant job search failed, using local embedding path: {e}", stacklevel=1)
+
     if embed_fn is None:
         scored = [(float(_keyword_score(query, j)), j) for j in jobs]
         scored.sort(key=lambda x: x[0], reverse=True)

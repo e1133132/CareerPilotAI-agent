@@ -94,6 +94,7 @@ def retrieve_learning_context(
     resources: list[dict[str, Any]],
     embed_fn: Any,
     top_k: int = 5,
+    dataset_path: str | None = None,
 ) -> list[dict[str, Any]]:
     """
     Retrieve top-k learning resource snippets by embedding similarity, else keyword overlap.
@@ -102,6 +103,23 @@ def retrieve_learning_context(
     top_k = max(1, int(top_k))
     if not resources:
         return []
+
+    # Prefer Qdrant persisted vector search when available.
+    try:
+        from .vector_store_qdrant import search_learning_resources
+
+        qdrant_hits = search_learning_resources(
+            query=query,
+            top_k=top_k,
+            embed_fn=embed_fn,
+            dataset_path=dataset_path,
+        )
+        if qdrant_hits:
+            return qdrant_hits
+    except Exception as e:
+        import warnings
+
+        warnings.warn(f"Qdrant learning search failed, using local embedding path: {e}", stacklevel=1)
 
     if embed_fn is None:
         scored: list[tuple[float, dict[str, Any]]] = []

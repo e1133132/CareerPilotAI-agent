@@ -186,6 +186,7 @@ Output ONLY JSON:
         resources=resources,
         embed_fn=get_embed_fn(),
         top_k=settings.STUDY_PLAN_RAG_TOP_K,
+        dataset_path=rag_path_used,
     )
     rag_block = format_rag_context_for_prompt(snippets)
 
