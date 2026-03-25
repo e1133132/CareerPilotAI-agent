@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 from io import BytesIO
+import threading
+import traceback
+import uuid
+from typing import Any
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pypdf import PdfReader  # type: ignore
 
@@ -24,6 +28,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# In-memory run store (dev/prototype).
+# For production + multiple workers, consider Redis or a persistent store.
+_RUN_STORE: dict[str, dict[str, Any]] = {}
+_RUN_LOCK = threading.Lock()
 
 
 @app.on_event("startup")
@@ -73,6 +82,41 @@ def _run_pipeline(state: dict) -> dict:
     return {"state": state, "report_text": report_text}
 
 
+def _run_pipeline_until_gap(state: dict) -> dict:
+    """
+    Run the pipeline up to (and including) skill gap analysis.
+
+    We intentionally stop before study_planning to make sure the API can respond fast.
+    """
+    # Make sure we have the baseline fields expected by orchestrator/agents.
+    state = dict(state)
+    state.setdefault("stage", "intake")
+    state.setdefault("messages", [])
+
+    # intake -> resume_analysis -> resume
+    orch_out = orchestrator(state) or {}
+    state.update(orch_out)
+    next_agent = state.get("next_agent") or "human"
+    if next_agent != "human":
+        state.update(participant(next_agent, state) or {})
+
+    # resume -> job_matching -> match
+    orch_out = orchestrator(state) or {}
+    state.update(orch_out)
+    next_agent = state.get("next_agent") or "human"
+    if next_agent != "human":
+        state.update(participant(next_agent, state) or {})
+
+    # match -> skill_gap -> gap
+    orch_out = orchestrator(state) or {}
+    state.update(orch_out)
+    next_agent = state.get("next_agent") or "human"
+    if next_agent != "human":
+        state.update(participant(next_agent, state) or {})
+
+    return state
+
+
 @app.get("/health")
 def health() -> dict:
     return {"ok": True, "service": settings.APP_NAME}
@@ -117,4 +161,119 @@ async def run_careerpilot(
         "study_plan": state.get("study_plan"),
         "report_text": result.get("report_text") or "",
         "full_state": state,
+    }
+
+
+def _finish_study_plan(run_id: str) -> None:
+    with _RUN_LOCK:
+        entry = _RUN_STORE.get(run_id)
+        if not entry:
+            return
+        state = entry.get("state") or {}
+
+    try:
+        result = _run_pipeline(state)
+        final_state = result.get("state") or {}
+        report_text = result.get("report_text") or ""
+        with _RUN_LOCK:
+            if run_id in _RUN_STORE:
+                _RUN_STORE[run_id].update(
+                    {
+                        "status": "done",
+                        "state": final_state,
+                        "report_text": report_text,
+                        "error": None,
+                    }
+                )
+    except Exception as e:
+        with _RUN_LOCK:
+            if run_id in _RUN_STORE:
+                _RUN_STORE[run_id].update(
+                    {
+                        "status": "error",
+                        "error": str(e),
+                        "trace": traceback.format_exc(limit=200),
+                    }
+                )
+
+
+@app.post("/api/careerpilot/run_partial")
+async def run_careerpilot_partial(
+    background_tasks: BackgroundTasks,
+    resume_file: UploadFile = File(...),
+    target_roles: str = Form(default=""),
+) -> dict:
+    """
+    Fast path: returns candidate_profile/job_matches/skill_gaps immediately,
+    then computes study_plan in background.
+    """
+    if resume_file.filename and not resume_file.filename.lower().endswith(".pdf"):
+        raise HTTPException(status_code=400, detail="Only .pdf resume files are supported")
+
+    raw_bytes = await resume_file.read()
+    if not raw_bytes:
+        raise HTTPException(status_code=400, detail="Uploaded resume_file is empty")
+
+    resume_text = _extract_pdf_text(raw_bytes)
+    if not resume_text:
+        raise HTTPException(
+            status_code=400,
+            detail="Could not extract text from PDF. If it is scanned, OCR is required.",
+        )
+
+    roles = [r.strip() for r in (target_roles or "").split(",") if r.strip()]
+    initial_state = {
+        "resume_text": resume_text,
+        "resume_path": None,
+        "target_roles": roles or None,
+    }
+
+    partial_state = _run_pipeline_until_gap(initial_state)
+
+    run_id = uuid.uuid4().hex
+    with _RUN_LOCK:
+        _RUN_STORE[run_id] = {
+            "status": "pending",
+            "state": partial_state,
+            "report_text": "",
+            "error": None,
+        }
+
+    background_tasks.add_task(_finish_study_plan, run_id)
+
+    return {
+        "ok": True,
+        "run_id": run_id,
+        "plan_status": "pending",
+        "candidate_profile": partial_state.get("candidate_profile"),
+        "resume_evidence": partial_state.get("resume_evidence"),
+        "recommended_jobs": partial_state.get("job_matches"),
+        "skill_gaps": partial_state.get("skill_gaps"),
+        "study_plan": None,
+        "report_text": "",
+    }
+
+
+@app.get("/api/careerpilot/result/{run_id}")
+def get_careerpilot_result(run_id: str) -> dict:
+    with _RUN_LOCK:
+        entry = _RUN_STORE.get(run_id)
+
+    if not entry:
+        raise HTTPException(status_code=404, detail="run_id not found")
+
+    status = entry.get("status")
+    state = entry.get("state") or {}
+
+    return {
+        "ok": True,
+        "run_id": run_id,
+        "plan_status": status,
+        "candidate_profile": state.get("candidate_profile"),
+        "resume_evidence": state.get("resume_evidence"),
+        "recommended_jobs": state.get("job_matches"),
+        "skill_gaps": state.get("skill_gaps"),
+        "study_plan": state.get("study_plan"),
+        "report_text": entry.get("report_text") or "",
+        "error": entry.get("error"),
     }
