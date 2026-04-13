@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-04-13（本地时间） | 任务：TRIVY-IMAGE-OPENSSL
+- **类型**：fix
+- **改动文件**：
+  - `Dockerfile`
+- **改动内容**：
+  - 在镜像构建早期新增 `apt-get update && apt-get upgrade -y`（并清理 apt 缓存），确保基础系统包（含 OpenSSL 相关包）升级到安全补丁版本。
+- **改动原因**：
+  - CI 的 Trivy image 扫描报告 `libssl3t64/openssl`（CVE-2026-28390, HIGH）并导致 `exit code 1`。
+- **验证方式**：
+  - 待 CI 重新构建镜像并重跑 `Run Trivy vulnerability scanner (image)` 验证。
+
+---
+
 ## 2026-04-13（本地时间） | 任务：TRIVY-CVE-2026-34070
 - **类型**：fix
 - **改动文件**：
