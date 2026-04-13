@@ -31,6 +31,7 @@ class Settings:
     # Qdrant vector store
     QDRANT_ENABLED: bool = os.getenv("QDRANT_ENABLED", "true").lower() == "true"
     QDRANT_URL: str = os.getenv("QDRANT_URL", "http://localhost:6333")
+    QDRANT_API_KEY: str = os.getenv("QDRANT_API_KEY", "")
     QDRANT_TIMEOUT_SECONDS: float = float(os.getenv("QDRANT_TIMEOUT_SECONDS", "5"))
     QDRANT_AUTO_START: bool = os.getenv("QDRANT_AUTO_START", "true").lower() == "true"
     QDRANT_READY_RETRIES: int = int(os.getenv("QDRANT_READY_RETRIES", "20"))

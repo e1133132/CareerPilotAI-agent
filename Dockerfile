@@ -12,12 +12,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy app source.
 COPY . .
 
-EXPOSE 8080
-
 # Non-root runtime user.
 ARG APP_USER=careerpilot
 RUN useradd -m -s /bin/bash "${APP_USER}" \
   && chown -R "${APP_USER}":"${APP_USER}" /app
 USER ${APP_USER}
 
-CMD ["python", "-m", "uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["sh", "-c", "python -m uvicorn api:app --host 0.0.0.0 --port ${PORT:-8080}"]
