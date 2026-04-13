@@ -5,6 +5,12 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
+# Apply latest Debian security patches to reduce base-image CVEs.
+RUN apt-get update \
+  && apt-get upgrade -y \
+  && apt-get autoremove -y \
+  && rm -rf /var/lib/apt/lists/*
+
 # Install dependencies first for better layer caching.
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt

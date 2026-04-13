@@ -4,6 +4,34 @@
 
 ---
 
+## 2026-04-13（本地时间） | 任务：TRIVY-IMAGE-OPENSSL
+- **类型**：fix
+- **改动文件**：
+  - `Dockerfile`
+- **改动内容**：
+  - 在镜像构建早期新增 `apt-get update && apt-get upgrade -y`（并清理 apt 缓存），确保基础系统包（含 OpenSSL 相关包）升级到安全补丁版本。
+- **改动原因**：
+  - CI 的 Trivy image 扫描报告 `libssl3t64/openssl`（CVE-2026-28390, HIGH）并导致 `exit code 1`。
+- **验证方式**：
+  - 待 CI 重新构建镜像并重跑 `Run Trivy vulnerability scanner (image)` 验证。
+
+---
+
+## 2026-04-13（本地时间） | 任务：TRIVY-CVE-2026-34070
+- **类型**：fix
+- **改动文件**：
+  - `pyproject.toml`
+  - `requirements.txt`
+  - `uv.lock`
+- **改动内容**：
+  - 约束 `langchain-core>=1.2.22` 并执行 `uv lock`，将锁文件中的 `langchain-core` 从 `1.2.20` 升至 `1.2.28`，修复 Trivy 报告的 **CVE-2026-34070**（HIGH，path traversal in legacy load_prompt）。
+- **改动原因**：
+  - CI 中 `trivy fs` 对 `uv.lock` 扫描失败（`exit-code: 1`）。
+- **验证方式**：
+  - `uv lock` 成功；本地可再运行 `trivy fs .` 确认该 CVE 不再出现在 `uv.lock` 目标中。
+
+---
+
 ## 2026-03-25 16:31（本地时间） | 任务：PLAN-STAGE-PARTIAL-RETURN
 - **类型**：update
 - **改动文件**：
