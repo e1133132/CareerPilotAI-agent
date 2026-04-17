@@ -8,4 +8,5 @@ __pycache__/
 openai_key.txt
 qdrant_key.txt
 .idea/
+key.json
 
