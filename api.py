@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from io import BytesIO
 import threading
+import time
 import traceback
 import uuid
+from datetime import datetime, timezone
 from typing import Any
 
 from dotenv import load_dotenv
@@ -15,6 +17,7 @@ from agents import orchestrator, participant, summarizer
 from config import settings
 from agents.llm_utils import get_embed_fn
 from tools.vector_store_qdrant import warmup_qdrant_indexes
+from tools.explainability import build_explainability_block
 
 load_dotenv(override=True)
 
@@ -43,6 +46,46 @@ def _startup_warmup() -> None:
     warmup_qdrant_indexes(get_embed_fn())
 
 
+def _output_keys_from_part_out(part_out: dict[str, Any]) -> list[str]:
+    return sorted(
+        k
+        for k in part_out
+        if k != "messages" and not str(k).startswith("_")
+    )
+
+
+def _append_trace_for_step(
+    trace: list[dict[str, Any]],
+    fallback_events: list[dict[str, Any]],
+    *,
+    stage: str,
+    agent_id: str,
+    part_out: dict[str, Any],
+    t0: float,
+    t1: float,
+) -> None:
+    step = part_out.pop("_step_explainability", None) or {}
+    keys = _output_keys_from_part_out(part_out)
+    trace.append(
+        {
+            "stage": stage,
+            "agent": agent_id,
+            "summary": step.get("summary")
+            or (f"Updated: {', '.join(keys)}" if keys else "step complete"),
+            "rationale": step.get("rationale") or "",
+            "output_keys": keys,
+            "duration_ms": round((t1 - t0) * 1000, 2),
+            "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        }
+    )
+    fe = step.get("fallback_event")
+    if isinstance(fe, dict):
+        fallback_events.append(fe)
+    for extra in step.get("fallback_events") or []:
+        if isinstance(extra, dict):
+            fallback_events.append(extra)
+
+
 def _extract_pdf_text(raw_bytes: bytes) -> str:
     try:
         reader = PdfReader(BytesIO(raw_bytes))
@@ -66,6 +109,9 @@ def _run_pipeline(state: dict) -> dict:
     state.setdefault("stage", "intake")
     state.setdefault("messages", [])
 
+    trace: list[dict[str, Any]] = list(state.get("pipeline_trace") or [])
+    fallback_events: list[dict[str, Any]] = list(state.get("fallback_events") or [])
+
     while steps < 20:
         steps += 1
         orch_out = orchestrator(state) or {}
@@ -75,8 +121,23 @@ def _run_pipeline(state: dict) -> dict:
         if next_agent == "human":
             break
 
+        stage = str(state.get("stage") or "")
+        t0 = time.perf_counter()
         part_out = participant(next_agent, state) or {}
+        t1 = time.perf_counter()
+        _append_trace_for_step(
+            trace,
+            fallback_events,
+            stage=stage,
+            agent_id=next_agent,
+            part_out=part_out,
+            t0=t0,
+            t1=t1,
+        )
         state.update(part_out)
+
+    state["pipeline_trace"] = trace
+    state["fallback_events"] = fallback_events
 
     report_text = summarizer(state)
     return {"state": state, "report_text": report_text}
@@ -93,26 +154,53 @@ def _run_pipeline_until_gap(state: dict) -> dict:
     state.setdefault("stage", "intake")
     state.setdefault("messages", [])
 
+    trace: list[dict[str, Any]] = []
+    fallback_events: list[dict[str, Any]] = []
+
     # intake -> resume_analysis -> resume
     orch_out = orchestrator(state) or {}
     state.update(orch_out)
     next_agent = state.get("next_agent") or "human"
     if next_agent != "human":
-        state.update(participant(next_agent, state) or {})
+        stage = str(state.get("stage") or "")
+        t0 = time.perf_counter()
+        part_out = participant(next_agent, state) or {}
+        t1 = time.perf_counter()
+        _append_trace_for_step(
+            trace, fallback_events, stage=stage, agent_id=next_agent, part_out=part_out, t0=t0, t1=t1
+        )
+        state.update(part_out)
 
     # resume -> job_matching -> match
     orch_out = orchestrator(state) or {}
     state.update(orch_out)
     next_agent = state.get("next_agent") or "human"
     if next_agent != "human":
-        state.update(participant(next_agent, state) or {})
+        stage = str(state.get("stage") or "")
+        t0 = time.perf_counter()
+        part_out = participant(next_agent, state) or {}
+        t1 = time.perf_counter()
+        _append_trace_for_step(
+            trace, fallback_events, stage=stage, agent_id=next_agent, part_out=part_out, t0=t0, t1=t1
+        )
+        state.update(part_out)
 
     # match -> skill_gap -> gap
     orch_out = orchestrator(state) or {}
     state.update(orch_out)
     next_agent = state.get("next_agent") or "human"
     if next_agent != "human":
-        state.update(participant(next_agent, state) or {})
+        stage = str(state.get("stage") or "")
+        t0 = time.perf_counter()
+        part_out = participant(next_agent, state) or {}
+        t1 = time.perf_counter()
+        _append_trace_for_step(
+            trace, fallback_events, stage=stage, agent_id=next_agent, part_out=part_out, t0=t0, t1=t1
+        )
+        state.update(part_out)
+
+    state["pipeline_trace"] = trace
+    state["fallback_events"] = fallback_events
 
     return state
 
@@ -160,6 +248,7 @@ async def run_careerpilot(
         "skill_gaps": state.get("skill_gaps"),
         "study_plan": state.get("study_plan"),
         "report_text": result.get("report_text") or "",
+        "explainability": build_explainability_block(state),
         "full_state": state,
     }
 
@@ -251,6 +340,7 @@ async def run_careerpilot_partial(
         "skill_gaps": partial_state.get("skill_gaps"),
         "study_plan": None,
         "report_text": "",
+        "explainability": build_explainability_block(partial_state),
     }
 
 
@@ -276,4 +366,5 @@ def get_careerpilot_result(run_id: str) -> dict:
         "study_plan": state.get("study_plan"),
         "report_text": entry.get("report_text") or "",
         "error": entry.get("error"),
+        "explainability": build_explainability_block(state),
     }

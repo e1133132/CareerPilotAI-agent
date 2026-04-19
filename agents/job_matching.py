@@ -7,6 +7,7 @@ from tools import load_jobs, rank_jobs_semantic
 from config import settings
 
 from .llm_utils import get_embed_fn
+from tools.explainability import job_matching_rationale, job_retrieval_fallback_event
 
 
 AGENT_ID = "job_matching"
@@ -38,6 +39,15 @@ def run(state: dict) -> dict:
         top_k=5,
     )
 
+    sm = ranked[0].get("score_method") if ranked else None
+    step: dict[str, Any] = {
+        "summary": f"Ranked {len(ranked)} jobs by semantic/keyword scoring.",
+        "rationale": job_matching_rationale(ranked, targets, str(sm) if sm is not None else None),
+    }
+    fe = job_retrieval_fallback_event(str(sm) if sm is not None else None)
+    if fe:
+        step["fallback_event"] = fe
+
     return {
         "job_matches": ranked,
         "messages": [
@@ -47,5 +57,6 @@ def run(state: dict) -> dict:
                 "content": f"Matched and ranked {len(ranked)} jobs.",
             }
         ],
+        "_step_explainability": step,
     }
 

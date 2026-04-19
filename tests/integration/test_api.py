@@ -50,6 +50,9 @@ def test_run_endpoint_success_with_mocked_pipeline(monkeypatch) -> None:
     assert payload["candidate_profile"]["name"] == "Test User"
     assert payload["recommended_jobs"][0]["id"] == "jd-001"
     assert payload["study_plan"]["timeline_weeks"] == 6
+    exp = payload["explainability"]
+    assert "pipeline_trace" in exp and "fallback_events" in exp and "limitations" in exp
+    assert isinstance(exp["limitations"], list) and len(exp["limitations"]) >= 1
 
 
 def test_run_partial_endpoint_returns_run_id(monkeypatch) -> None:
@@ -81,3 +84,5 @@ def test_run_partial_endpoint_returns_run_id(monkeypatch) -> None:
     assert "run_id" in payload
     assert payload["plan_status"] == "pending"
     assert payload["recommended_jobs"][0]["id"] == "jd-001"
+    exp = payload["explainability"]
+    assert "pipeline_trace" in exp and "limitations" in exp
