@@ -22,6 +22,21 @@ class Settings:
     RESUME_ANALYSIS_RESUME_TEXT_MAX_CHARS: int = int(
         os.getenv("RESUME_ANALYSIS_RESUME_TEXT_MAX_CHARS", "12000")
     )
+    API_RESUME_TEXT_MAX_CHARS: int = int(
+        os.getenv("API_RESUME_TEXT_MAX_CHARS", os.getenv("RESUME_ANALYSIS_RESUME_TEXT_MAX_CHARS", "12000"))
+    )
+
+    INPUT_GUARD_ENABLED: bool = os.getenv("INPUT_GUARD_ENABLED", "true").lower() == "true"
+    INPUT_GUARD_PROMPT_INJECTION_THRESHOLD: int = int(os.getenv("INPUT_GUARD_PROMPT_INJECTION_THRESHOLD", "1"))
+    TARGET_ROLES_MAX_COUNT: int = int(os.getenv("TARGET_ROLES_MAX_COUNT", "12"))
+    TARGET_ROLE_MAX_CHARS: int = int(os.getenv("TARGET_ROLE_MAX_CHARS", "120"))
+
+    INPUT_GUARD_LLM_ENABLED: bool = os.getenv("INPUT_GUARD_LLM_ENABLED", "false").lower() == "true"
+    INPUT_GUARD_LLM_MODEL: str = os.getenv("INPUT_GUARD_LLM_MODEL", "gpt-4o-mini")
+    INPUT_GUARD_LLM_MAX_INPUT_CHARS: int = int(os.getenv("INPUT_GUARD_LLM_MAX_INPUT_CHARS", "6000"))
+    INPUT_GUARD_LLM_TIMEOUT_SECONDS: float = float(os.getenv("INPUT_GUARD_LLM_TIMEOUT_SECONDS", "20"))
+    INPUT_GUARD_LLM_FAIL_OPEN: bool = os.getenv("INPUT_GUARD_LLM_FAIL_OPEN", "true").lower() == "true"
+
     SKILL_GAP_USER_MAX_CHARS: int = int(os.getenv("SKILL_GAP_USER_MAX_CHARS", "15000"))
     STUDY_PLANNING_USER_MAX_CHARS: int = int(os.getenv("STUDY_PLANNING_USER_MAX_CHARS", "30000"))
 
@@ -31,6 +46,7 @@ class Settings:
     # Qdrant vector store
     QDRANT_ENABLED: bool = os.getenv("QDRANT_ENABLED", "true").lower() == "true"
     QDRANT_URL: str = os.getenv("QDRANT_URL", "http://localhost:6333")
+    QDRANT_API_KEY: str = os.getenv("QDRANT_API_KEY", "")
     QDRANT_TIMEOUT_SECONDS: float = float(os.getenv("QDRANT_TIMEOUT_SECONDS", "5"))
     QDRANT_AUTO_START: bool = os.getenv("QDRANT_AUTO_START", "true").lower() == "true"
     QDRANT_READY_RETRIES: int = int(os.getenv("QDRANT_READY_RETRIES", "20"))
