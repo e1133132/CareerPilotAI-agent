@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Callable
 
 from utils import debug
+from security.output_filter import filter_agent_output
 
 from . import job_matching, resume_analysis, skill_gap, study_planning
 
@@ -47,7 +48,11 @@ def participant(agent_id: str, state: dict) -> dict:
     if entry:
         runner: Any = entry.get("run")
         if callable(runner):
-            return runner(state)
+            out = runner(state) or {}
+            return filter_agent_output(out, agent_id=agent_id)
 
-    return {"messages": [{"role": "assistant", "content": f"Unknown agent: {agent_id}"}]}
+    return filter_agent_output(
+        {"messages": [{"role": "assistant", "content": f"Unknown agent: {agent_id}"}]},
+        agent_id=agent_id,
+    )
 
