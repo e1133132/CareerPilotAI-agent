@@ -82,7 +82,7 @@ Subsequent runs reuse persisted vectors from Docker volume (`qdrant_storage`).
 
 ## API endpoint
 
-- `POST /api/careerpilot/run` (multipart/form-data)
+- `POST /api/careerpilot/run` (multipart/form-data) — response includes **`explainability`** (`pipeline_trace` with per-step `rationale`, `fallback_events`, `limitations`) alongside existing fields.
   - `resume_file`: PDF file (required)
   - `target_roles`: comma separated roles (optional)
 

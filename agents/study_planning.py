@@ -13,6 +13,7 @@ from tools.learning_rag import (
     retrieve_learning_context,
 )
 from .llm_utils import extract_json_block, get_embed_fn, safe_json_loads
+from tools.explainability import learning_rag_fallback_event, study_plan_rationale
 
 
 AGENT_ID = "study_planning"
@@ -122,16 +123,33 @@ def run(state: dict, *, model: str = DEFAULT_MODEL) -> dict:
             },
         ]
 
+        sp = {
+            "timeline_weeks": timeline_weeks,
+            "phases": phases,
+            "interview_prep": ["Prepare STAR stories", "Review top job description and map experience"],
+            "portfolio_tips": ["Show measurable impact", "Add clear README and screenshots"],
+            "resources": [],
+            "notes": ["Fallback mode: generated without langchain (no RAG)."],
+        }
         return {
-            "study_plan": {
-                "timeline_weeks": timeline_weeks,
-                "phases": phases,
-                "interview_prep": ["Prepare STAR stories", "Review top job description and map experience"],
-                "portfolio_tips": ["Show measurable impact", "Add clear README and screenshots"],
-                "resources": [],
-                "notes": ["Fallback mode: generated without langchain (no RAG)."],
-            },
+            "study_plan": sp,
             "messages": [{"role": "assistant", "name": AGENT_NAME, "content": "Study plan generated (fallback mode)."}],
+            "_step_explainability": {
+                "summary": "Study plan from deterministic template (no LangChain / no RAG).",
+                "rationale": study_plan_rationale(
+                    timeline_weeks=timeline_weeks,
+                    n_phases=len(phases),
+                    n_snippets=0,
+                    rag_method=None,
+                    langchain_ok=False,
+                ),
+                "fallback_event": {
+                    "component": "study_planning",
+                    "from": "rag_llm",
+                    "to": "deterministic_template",
+                    "reason": "LangChain not installed; minimal plan without retrieval-grounded LLM.",
+                },
+            },
         }
 
     system = """You are the Study Planning Agent.
@@ -213,6 +231,11 @@ Output ONLY JSON:
         payload = safe_json_loads(jb or "") or {"raw": raw}
 
     rag_resources = _resources_from_rag_snippets(snippets)
+    rag_method = str(snippets[0].get("score_method")) if snippets else None
+    _sp_ex: dict[str, Any] = {}
+    fe_rag = learning_rag_fallback_event(rag_method)
+    if fe_rag:
+        _sp_ex["fallback_event"] = fe_rag
 
     if isinstance(payload, dict):
         payload["rag_query"] = rag_query
@@ -230,6 +253,29 @@ Output ONLY JSON:
                 "Use default career_pilot_ai/data/learning_resources.jsonl or set LEARNING_RESOURCES_PATH to a valid file. "
                 "If .env has LEARNING_RESOURCES_PATH= with no path, remove it or set a real path."
             )
+    phases_n = 0
+    tw: int | None = None
+    if isinstance(payload, dict):
+        tw = payload.get("timeline_weeks")
+        if isinstance(tw, int):
+            pass
+        elif tw is not None:
+            try:
+                tw = int(tw)
+            except (TypeError, ValueError):
+                tw = None
+        ph = payload.get("phases")
+        phases_n = len(ph) if isinstance(ph, list) else 0
+
+    _sp_ex["summary"] = "Study plan from LLM grounded in retrieved learning snippets when available."
+    _sp_ex["rationale"] = study_plan_rationale(
+        timeline_weeks=tw,
+        n_phases=phases_n,
+        n_snippets=len(snippets),
+        rag_method=rag_method,
+        langchain_ok=True,
+    )
+
     return {
         "study_plan": payload,
         "messages": [
@@ -239,5 +285,6 @@ Output ONLY JSON:
                 "content": "Personalized study plan generated (RAG-grounded when snippets available).",
             }
         ],
+        "_step_explainability": _sp_ex,
     }
 

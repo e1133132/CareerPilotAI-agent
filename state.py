@@ -24,3 +24,7 @@ class State(TypedDict, total=False):
     next_agent: Optional[str]
     stage: str  # intake -> resume -> match -> gap -> plan -> done
 
+    # explainability (optional; assembled in api pipeline)
+    pipeline_trace: Optional[list[dict[str, Any]]]
+    fallback_events: Optional[list[dict[str, Any]]]
+

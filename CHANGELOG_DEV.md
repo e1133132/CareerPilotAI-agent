@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-04-19（本地时间） | 任务：PLAN-9-EXPLAINABILITY
+- **类型**：feature
+- **改动文件**：
+  - `api.py`（`pipeline_trace` / `fallback_events` 写入 state；响应增加 `explainability`）
+  - `tools/explainability.py`（`limitations`、从结构化输出生成用户向 `rationale`、fallback 事件辅助）
+  - `state.py`（可选 `pipeline_trace`、`fallback_events`）
+  - `agents/resume_analysis.py`、`job_matching.py`、`skill_gap.py`、`study_planning.py`（`_step_explainability`：summary / rationale / fallback_event）
+  - `tests/integration/test_api.py`
+  - `README.md`
+- **改动内容**：
+  - `/api/careerpilot/run`、`run_partial`、`result/{run_id}` 返回体新增 **`explainability`**：`pipeline_trace`（含 `rationale`、`duration_ms` 等）、`fallback_events`、`limitations`。
+  - 各 agent 用现有结构化结果生成简短用户可读说明，无额外 LLM 调用；修复 `resume_analysis` 在 langchain 缺失时引用未定义变量的路径。
+- **验证方式**：
+  - `PYTHONPATH=. uv run pytest tests/integration/test_api.py -q`
+
+---
+
 ## 2026-04-13（本地时间） | 任务：TRIVY-IMAGE-OPENSSL
 - **类型**：fix
 - **改动文件**：
