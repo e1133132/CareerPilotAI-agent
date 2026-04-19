@@ -91,7 +91,12 @@ def _qdrant_client():
         from qdrant_client import QdrantClient
     except Exception:
         return None
-    return QdrantClient(url=settings.QDRANT_URL, timeout=settings.QDRANT_TIMEOUT_SECONDS)
+
+    return QdrantClient(
+        url=settings.QDRANT_URL,
+        api_key=settings.QDRANT_API_KEY,   # 👈 关键新增
+        timeout=settings.QDRANT_TIMEOUT_SECONDS,
+    )
 
 
 def qdrant_enabled() -> bool:

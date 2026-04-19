@@ -6,6 +6,7 @@ import json
 from config import settings
 from .llm_utils import extract_json_block, safe_json_loads
 from utils import debug
+from tools.explainability import resume_rationale_from_outputs
 
 AGENT_ID = "resume_analysis"
 AGENT_NAME = "Resume Analysis Agent"
@@ -31,6 +32,16 @@ def run(state: dict, *, model: str = DEFAULT_MODEL) -> dict:
     except ModuleNotFoundError as e:
         debug(f"LangChain imports failed: {str(e)}", "resume_analysis")
 
+        profile = {
+            "name": "",
+            "headline": "",
+            "education": [],
+            "experience": [],
+            "skills": [],
+            "certifications": [],
+            "links": [],
+        }
+        evidence = {"skills": [], "education": [], "experience": []}
         return {
             "candidate_profile": {},
             "resume_evidence": {},
@@ -41,6 +52,16 @@ def run(state: dict, *, model: str = DEFAULT_MODEL) -> dict:
                     "content": "Resume parsed (fallback mode). Candidate profile created.",
                 }
             ],
+            "_step_explainability": {
+                "summary": "Resume step used minimal stub (langchain unavailable).",
+                "rationale": resume_rationale_from_outputs(profile, evidence),
+                "fallback_event": {
+                    "component": "resume_analysis",
+                    "from": "llm_structured",
+                    "to": "minimal_stub",
+                    "reason": "LangChain not installed; cannot run structured extraction.",
+                },
+            },
         }
 
     system = """You are the Resume Analysis Agent for CareerPilot AI.
@@ -181,21 +202,23 @@ JSON SCHEMA:
     evidence = payload.get("evidence") or {}
 
 
+    cand = {
+        "name": profile.get("name", ""),
+        "headline": profile.get("headline", ""),
+        "education": profile.get("education", []),
+        "experience": profile.get("experience", []),
+        "skills": profile.get("skills", []),
+        "certifications": profile.get("certifications", []),
+        "links": profile.get("links", []),
+    }
+    ev_out = {
+        "skills": evidence.get("skills", []),
+        "education": evidence.get("education", []),
+        "experience": evidence.get("experience", []),
+    }
     return {
-        "candidate_profile": {
-            "name": profile.get("name", ""),
-            "headline": profile.get("headline", ""),
-            "education": profile.get("education", []),
-            "experience": profile.get("experience", []),
-            "skills": profile.get("skills", []),
-            "certifications": profile.get("certifications", []),
-            "links": profile.get("links", []),
-        },
-        "resume_evidence": {
-            "skills": evidence.get("skills", []),
-            "education": evidence.get("education", []),
-            "experience": evidence.get("experience", []),
-        },
+        "candidate_profile": cand,
+        "resume_evidence": ev_out,
         "messages": [
             {
                 "role": "assistant",
@@ -203,4 +226,8 @@ JSON SCHEMA:
                 "content": "Resume parsed. Candidate profile created.",
             }
         ],
+        "_step_explainability": {
+            "summary": "Extracted candidate_profile and resume_evidence from resume text.",
+            "rationale": resume_rationale_from_outputs(cand, ev_out),
+        },
     }

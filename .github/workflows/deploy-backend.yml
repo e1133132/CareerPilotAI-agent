@@ -1,0 +1,33 @@
+name: Deploy Backend to Cloud Run
+
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy backend to Cloud Run
+        run: |
+          gcloud run deploy careerpilot-backend \
+            --source . \
+            --region asia-southeast1 \
+            --allow-unauthenticated \
+            --set-env-vars QDRANT_ENABLED=true,QDRANT_URL=https://db226c29-4fce-46cd-b978-26b0c6be57f2.us-west-1-0.aws.cloud.qdrant.io \
+            --update-secrets OPENAI_API_KEY=openai-api-key:latest,QDRANT_API_KEY=qdrant-api-key:latest

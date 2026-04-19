@@ -1,16 +1,16 @@
 {
   "jobs_index": {
-    "file": "C:\\Users\\10156\\Desktop\\cursor project\\CareerPilotAI-agent\\data\\jobs.jsonl",
-    "file_hash": "d3ad612cda27defbcc2907cd9f0d6959775005f80842c4f5b15f6ffd66f9f6c5",
+    "file": "/Users/ache/Documents/NUS/Software Engineering/AI Class/Al Systems - Practice Module/CareerPilotAI-agent/data/jobs.jsonl",
+    "file_hash": "73b371aa2850cfae7e1768cf7d50bbe1f08eccfaa53e9ea3d1ff8876502eedf9",
     "model": "text-embedding-3-small",
     "count": 20,
-    "updated_at": 1774423853
+    "updated_at": 1776563981
   },
   "learning_index": {
-    "file": "C:\\Users\\10156\\Desktop\\cursor project\\CareerPilotAI-agent\\data\\learning_resources.jsonl",
-    "file_hash": "6eb7e28d48e1fc6f611a84492f13a0ef4cc4120b26bcba46a52377671ecb1a2a",
+    "file": "/Users/ache/Documents/NUS/Software Engineering/AI Class/Al Systems - Practice Module/CareerPilotAI-agent/data/learning_resources.jsonl",
+    "file_hash": "5c2002e7321a0b08ea757e024e0c3ff9b53cc9328d249b3d2d4bd5d7ac514a7e",
     "model": "text-embedding-3-small",
     "count": 25,
-    "updated_at": 1774423859
+    "updated_at": 1776563990
   }
 }

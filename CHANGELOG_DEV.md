@@ -4,6 +4,51 @@
 
 ---
 
+## 2026-04-19（本地时间） | 任务：PLAN-9-EXPLAINABILITY
+- **类型**：feature
+- **改动文件**：
+  - `api.py`（`pipeline_trace` / `fallback_events` 写入 state；响应增加 `explainability`）
+  - `tools/explainability.py`（`limitations`、从结构化输出生成用户向 `rationale`、fallback 事件辅助）
+  - `state.py`（可选 `pipeline_trace`、`fallback_events`）
+  - `agents/resume_analysis.py`、`job_matching.py`、`skill_gap.py`、`study_planning.py`（`_step_explainability`：summary / rationale / fallback_event）
+  - `tests/integration/test_api.py`
+  - `README.md`
+- **改动内容**：
+  - `/api/careerpilot/run`、`run_partial`、`result/{run_id}` 返回体新增 **`explainability`**：`pipeline_trace`（含 `rationale`、`duration_ms` 等）、`fallback_events`、`limitations`。
+  - 各 agent 用现有结构化结果生成简短用户可读说明，无额外 LLM 调用；修复 `resume_analysis` 在 langchain 缺失时引用未定义变量的路径。
+- **验证方式**：
+  - `PYTHONPATH=. uv run pytest tests/integration/test_api.py -q`
+
+---
+
+## 2026-04-13（本地时间） | 任务：TRIVY-IMAGE-OPENSSL
+- **类型**：fix
+- **改动文件**：
+  - `Dockerfile`
+- **改动内容**：
+  - 在镜像构建早期新增 `apt-get update && apt-get upgrade -y`（并清理 apt 缓存），确保基础系统包（含 OpenSSL 相关包）升级到安全补丁版本。
+- **改动原因**：
+  - CI 的 Trivy image 扫描报告 `libssl3t64/openssl`（CVE-2026-28390, HIGH）并导致 `exit code 1`。
+- **验证方式**：
+  - 待 CI 重新构建镜像并重跑 `Run Trivy vulnerability scanner (image)` 验证。
+
+---
+
+## 2026-04-13（本地时间） | 任务：TRIVY-CVE-2026-34070
+- **类型**：fix
+- **改动文件**：
+  - `pyproject.toml`
+  - `requirements.txt`
+  - `uv.lock`
+- **改动内容**：
+  - 约束 `langchain-core>=1.2.22` 并执行 `uv lock`，将锁文件中的 `langchain-core` 从 `1.2.20` 升至 `1.2.28`，修复 Trivy 报告的 **CVE-2026-34070**（HIGH，path traversal in legacy load_prompt）。
+- **改动原因**：
+  - CI 中 `trivy fs` 对 `uv.lock` 扫描失败（`exit-code: 1`）。
+- **验证方式**：
+  - `uv lock` 成功；本地可再运行 `trivy fs .` 确认该 CVE 不再出现在 `uv.lock` 目标中。
+
+---
+
 ## 2026-03-25 16:31（本地时间） | 任务：PLAN-STAGE-PARTIAL-RETURN
 - **类型**：update
 - **改动文件**：

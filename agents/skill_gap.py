@@ -4,6 +4,7 @@ import json
 
 from config import settings
 from .llm_utils import extract_json_block, safe_json_loads
+from tools.explainability import skill_gap_rationale
 
 
 AGENT_ID = "skill_gap"
@@ -38,6 +39,16 @@ def run(state: dict, *, model: str = DEFAULT_MODEL) -> dict:
         return {
             "skill_gaps": payload,
             "messages": [{"role": "assistant", "name": AGENT_NAME, "content": "Skill gaps identified (fallback mode)."}],
+            "_step_explainability": {
+                "summary": "Skill gaps from rule-based resume vs. top job requirements.",
+                "rationale": skill_gap_rationale(payload, rule_based=True),
+                "fallback_event": {
+                    "component": "skill_gap",
+                    "from": "llm",
+                    "to": "rule_based",
+                    "reason": "LangChain not installed; compared resume skills to top job requirements.",
+                },
+            },
         }
 
     system = """You are the Skill Gap Agent.
@@ -93,5 +104,9 @@ Output ONLY JSON:
                 "content": "Skill gaps identified for the top job match.",
             }
         ],
+        "_step_explainability": {
+            "summary": "Skill gaps from LLM comparison of profile, evidence, and target job.",
+            "rationale": skill_gap_rationale(payload if isinstance(payload, dict) else {}, rule_based=False),
+        },
     }
 
