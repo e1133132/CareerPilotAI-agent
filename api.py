@@ -17,6 +17,7 @@ from agents import orchestrator, participant, summarizer
 from config import settings
 from agents.llm_utils import get_embed_fn
 from security.input_guard import normalize_target_roles, validate_api_user_inputs
+from security.output_filter import filter_report_text
 from tools.vector_store_qdrant import warmup_qdrant_indexes
 from tools.explainability import build_explainability_block
 
@@ -140,7 +141,7 @@ def _run_pipeline(state: dict) -> dict:
     state["pipeline_trace"] = trace
     state["fallback_events"] = fallback_events
 
-    report_text = summarizer(state)
+    report_text = filter_report_text(summarizer(state))
     return {"state": state, "report_text": report_text}
 
 

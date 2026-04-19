@@ -37,6 +37,20 @@ class Settings:
     INPUT_GUARD_LLM_TIMEOUT_SECONDS: float = float(os.getenv("INPUT_GUARD_LLM_TIMEOUT_SECONDS", "20"))
     INPUT_GUARD_LLM_FAIL_OPEN: bool = os.getenv("INPUT_GUARD_LLM_FAIL_OPEN", "true").lower() == "true"
 
+    # Output safety (post-LLM): heuristics always run when enabled; moderation is optional (extra API calls).
+    OUTPUT_FILTER_ENABLED: bool = os.getenv("OUTPUT_FILTER_ENABLED", "true").lower() == "true"
+    OUTPUT_FILTER_OPENAI_MODERATION: bool = (
+        os.getenv("OUTPUT_FILTER_OPENAI_MODERATION", "false").lower() == "true"
+    )
+    OUTPUT_FILTER_OPENAI_FAIL_OPEN: bool = (
+        os.getenv("OUTPUT_FILTER_OPENAI_FAIL_OPEN", "true").lower() == "true"
+    )
+    OUTPUT_FILTER_MAX_STRING_CHARS: int = int(os.getenv("OUTPUT_FILTER_MAX_STRING_CHARS", "8000"))
+    OUTPUT_FILTER_HEURISTIC_MAX_SCAN_CHARS: int = int(
+        os.getenv("OUTPUT_FILTER_HEURISTIC_MAX_SCAN_CHARS", "24000")
+    )
+    OUTPUT_FILTER_MODERATION_BATCH_SIZE: int = int(os.getenv("OUTPUT_FILTER_MODERATION_BATCH_SIZE", "16"))
+
     SKILL_GAP_USER_MAX_CHARS: int = int(os.getenv("SKILL_GAP_USER_MAX_CHARS", "15000"))
     STUDY_PLANNING_USER_MAX_CHARS: int = int(os.getenv("STUDY_PLANNING_USER_MAX_CHARS", "30000"))
 
