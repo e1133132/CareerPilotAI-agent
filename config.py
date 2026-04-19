@@ -22,6 +22,21 @@ class Settings:
     RESUME_ANALYSIS_RESUME_TEXT_MAX_CHARS: int = int(
         os.getenv("RESUME_ANALYSIS_RESUME_TEXT_MAX_CHARS", "12000")
     )
+    API_RESUME_TEXT_MAX_CHARS: int = int(
+        os.getenv("API_RESUME_TEXT_MAX_CHARS", os.getenv("RESUME_ANALYSIS_RESUME_TEXT_MAX_CHARS", "12000"))
+    )
+
+    INPUT_GUARD_ENABLED: bool = os.getenv("INPUT_GUARD_ENABLED", "true").lower() == "true"
+    INPUT_GUARD_PROMPT_INJECTION_THRESHOLD: int = int(os.getenv("INPUT_GUARD_PROMPT_INJECTION_THRESHOLD", "1"))
+    TARGET_ROLES_MAX_COUNT: int = int(os.getenv("TARGET_ROLES_MAX_COUNT", "12"))
+    TARGET_ROLE_MAX_CHARS: int = int(os.getenv("TARGET_ROLE_MAX_CHARS", "120"))
+
+    INPUT_GUARD_LLM_ENABLED: bool = os.getenv("INPUT_GUARD_LLM_ENABLED", "false").lower() == "true"
+    INPUT_GUARD_LLM_MODEL: str = os.getenv("INPUT_GUARD_LLM_MODEL", "gpt-4o-mini")
+    INPUT_GUARD_LLM_MAX_INPUT_CHARS: int = int(os.getenv("INPUT_GUARD_LLM_MAX_INPUT_CHARS", "6000"))
+    INPUT_GUARD_LLM_TIMEOUT_SECONDS: float = float(os.getenv("INPUT_GUARD_LLM_TIMEOUT_SECONDS", "20"))
+    INPUT_GUARD_LLM_FAIL_OPEN: bool = os.getenv("INPUT_GUARD_LLM_FAIL_OPEN", "true").lower() == "true"
+
     SKILL_GAP_USER_MAX_CHARS: int = int(os.getenv("SKILL_GAP_USER_MAX_CHARS", "15000"))
     STUDY_PLANNING_USER_MAX_CHARS: int = int(os.getenv("STUDY_PLANNING_USER_MAX_CHARS", "30000"))
 

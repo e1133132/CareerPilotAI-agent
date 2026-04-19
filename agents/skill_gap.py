@@ -21,8 +21,8 @@ def run(state: dict, *, model: str = DEFAULT_MODEL) -> dict:
 
     # Fallback when langchain is not installed: do a simple rule-based gap analysis.
     try:
-        from langchain.schema import HumanMessage, SystemMessage  # type: ignore
-        from langchain_openai import ChatOpenAI  # type: ignore
+        from langchain_core.messages import HumanMessage, SystemMessage
+        from langchain_openai import ChatOpenAI
     except ModuleNotFoundError:
         cand_skills = set((profile.get("skills") or []))
         req_skills = set((top_job.get("skills_required") or []))
@@ -64,6 +64,7 @@ Tasks:
 - Prioritize gaps by impact (high/medium/low) and explain why.
 - Keep it explainable: reference the evidence snippets that support current skills.
 - Avoid sensitive attributes.
+- Fairness: compare job-required skills to stated candidate skills only; do not penalize or reward based on protected traits; refuse to amplify stereotypes.
 
 Output ONLY JSON:
 {

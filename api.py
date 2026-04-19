@@ -16,6 +16,7 @@ from pypdf import PdfReader  # type: ignore
 from agents import orchestrator, participant, summarizer
 from config import settings
 from agents.llm_utils import get_embed_fn
+from security.input_guard import normalize_target_roles, validate_api_user_inputs
 from tools.vector_store_qdrant import warmup_qdrant_indexes
 from tools.explainability import build_explainability_block
 
@@ -229,7 +230,8 @@ async def run_careerpilot(
             detail="Could not extract text from PDF. If it is scanned, OCR is required.",
         )
 
-    roles = [r.strip() for r in (target_roles or "").split(",") if r.strip()]
+    roles = normalize_target_roles(target_roles)
+    resume_text = validate_api_user_inputs(resume_text, roles)
 
     result = _run_pipeline(
         {
@@ -310,7 +312,9 @@ async def run_careerpilot_partial(
             detail="Could not extract text from PDF. If it is scanned, OCR is required.",
         )
 
-    roles = [r.strip() for r in (target_roles or "").split(",") if r.strip()]
+    roles = normalize_target_roles(target_roles)
+    resume_text = validate_api_user_inputs(resume_text, roles)
+
     initial_state = {
         "resume_text": resume_text,
         "resume_path": None,
