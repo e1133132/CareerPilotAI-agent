@@ -93,11 +93,11 @@ def _extract_pdf_text(raw_bytes: bytes) -> str:
         reader = PdfReader(BytesIO(raw_bytes))
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to read PDF: {str(e)}") from e
-
+#CICD DEMO
     pages_text: list[str] = []
     for page in reader.pages:
         try:
-            t = (page.extract_text() or "").strip()
+            t = (page.extract_text() or "").strip() 
         except Exception:
             t = ""
         if t:
