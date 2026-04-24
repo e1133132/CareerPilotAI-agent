@@ -13,6 +13,11 @@ on:
       - '.github/workflows/ci.yml'
   workflow_dispatch:
 
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
 defaults:
   run:
     working-directory: .
@@ -71,7 +76,7 @@ jobs:
             --cov-report=html:coverage/html
 
       - name: Publish unit test report
-        if: always()
+        if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
         uses: dorny/test-reporter@v1
         with:
           name: Unit Test Results
