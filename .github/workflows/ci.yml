@@ -13,6 +13,11 @@ on:
       - '.github/workflows/ci.yml'
   workflow_dispatch:
 
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
 defaults:
   run:
     working-directory: .
@@ -41,7 +46,7 @@ jobs:
         run: ruff check api.py config.py tools tests security agents
 
   test:
-    name: Unit/Integration Tests
+    name: Unit Tests
     runs-on: ubuntu-latest
     needs: lint
     steps:
@@ -58,10 +63,45 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest
+          pip install pytest pytest-cov
 
-      - name: Run tests
-        run: PYTHONPATH=. pytest tests/ -v --tb=short
+      - name: Run all unit tests with reports
+        run: |
+          mkdir -p test-results coverage
+          PYTHONPATH=. pytest tests/unit -v --tb=short \
+            --junitxml=test-results/junit.xml \
+            --cov=. \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage/coverage.xml \
+            --cov-report=html:coverage/html
+
+      - name: Publish unit test report
+        if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
+        uses: dorny/test-reporter@v1
+        with:
+          name: Unit Test Results
+          path: test-results/junit.xml
+          reporter: java-junit
+          fail-on-error: false
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-artifacts
+          path: |
+            test-results/junit.xml
+            coverage/coverage.xml
+            coverage/html
+
+      - name: Add test summary
+        if: always()
+        run: |
+          echo "## Unit Test Report" >> $GITHUB_STEP_SUMMARY
+          echo "- Ran: \`pytest tests/unit\` (all unit tests)" >> $GITHUB_STEP_SUMMARY
+          echo "- JUnit report: \`test-results/junit.xml\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Coverage XML: \`coverage/coverage.xml\`" >> $GITHUB_STEP_SUMMARY
+          echo "- HTML coverage uploaded as artifact: \`unit-test-artifacts\`" >> $GITHUB_STEP_SUMMARY
 
   docker-build-push:
     name: Docker Build & Push
