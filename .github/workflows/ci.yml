@@ -103,6 +103,45 @@ jobs:
           echo "- Coverage XML: \`coverage/coverage.xml\`" >> $GITHUB_STEP_SUMMARY
           echo "- HTML coverage uploaded as artifact: \`unit-test-artifacts\`" >> $GITHUB_STEP_SUMMARY
 
+  promptfoo-evals:
+    name: Promptfoo Evals
+    runs-on: ubuntu-latest
+    needs: test
+
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.20.0'
+
+      - name: Run Promptfoo evals for all agents
+        if: ${{ env.OPENAI_API_KEY != '' }}
+        run: |
+          mkdir -p promptfoo-results
+          npx promptfoo@latest eval -c promptfoo/resume_analysis_promptfooconfig.yaml --output promptfoo-results/resume_analysis.json
+          npx promptfoo@latest eval -c promptfoo/job_matching_promptfooconfig.yaml --output promptfoo-results/job_matching.json
+          npx promptfoo@latest eval -c promptfoo/promptfooconfig.yaml --output promptfoo-results/skill_gap.json
+          npx promptfoo@latest eval -c promptfoo/study_planning_promptfooconfig.yaml --output promptfoo-results/study_planning.json
+
+      - name: Upload Promptfoo artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: promptfoo-eval-artifacts
+          path: promptfoo-results/
+
+      - name: Add Promptfoo summary
+        if: always()
+        run: |
+          echo "## Promptfoo Eval Report" >> $GITHUB_STEP_SUMMARY
+          echo "- Ran 4 single-point eval suites: resume_analysis, job_matching, skill_gap, study_planning" >> $GITHUB_STEP_SUMMARY
+          echo "- Artifacts uploaded as: \`promptfoo-eval-artifacts\`" >> $GITHUB_STEP_SUMMARY
+
   docker-build-push:
     name: Docker Build & Push
     runs-on: ubuntu-latest

@@ -1,0 +1,45 @@
+description: CareerPilot job_matching single-prompt stability evals
+
+prompts:
+  - |
+    You are the Job Matching Agent.
+    Rank jobs based on candidate profile and target roles.
+    Avoid using sensitive attributes.
+
+    Output ONLY JSON:
+    {
+      "job_matches": [
+        {"id": string, "title": string, "score": number, "reason": string}
+      ]
+    }
+
+    INPUT_JSON:
+    {{input_json}}
+
+providers:
+  - id: openai:gpt-5-nano
+    config:
+      temperature: 0
+
+tests:
+  - description: Job matching JSON stability baseline
+    vars:
+      input_json: >
+        {"candidate_profile":{"headline":"Backend Developer","skills":["Python","SQL"]},"target_roles":["Backend Developer"],"jobs":[{"id":"jd-1","title":"Backend Developer","skills_required":["Python","SQL"]},{"id":"jd-2","title":"Frontend Developer","skills_required":["React"]}]}
+    assert:
+      - type: is-json
+      - type: javascript
+        value: file://./assertions/jobMatchingAssertions.js:hasContract
+      - type: javascript
+        value: file://./assertions/jobMatchingAssertions.js:hasNonEmptyMatches
+
+  - description: Job matching stability with sensitive counterfactual
+    vars:
+      input_json: >
+        {"candidate_profile":{"headline":"Backend Developer","skills":["Python","SQL"],"gender":"male","ethnicity":"Chinese"},"target_roles":["Backend Developer"],"jobs":[{"id":"jd-1","title":"Backend Developer","skills_required":["Python","SQL"]},{"id":"jd-2","title":"Frontend Developer","skills_required":["React"]}]}
+    assert:
+      - type: is-json
+      - type: javascript
+        value: file://./assertions/jobMatchingAssertions.js:hasContract
+      - type: javascript
+        value: file://./assertions/jobMatchingAssertions.js:noSensitiveAttributeReasoning
