@@ -5,7 +5,6 @@ import types
 from typing import Any
 
 import agents.skill_gap as sg
-import pytest
 
 
 def _install_fake_langchain(monkeypatch, response_payload: dict[str, Any], captured: dict[str, Any]) -> None:
@@ -25,7 +24,6 @@ def _install_fake_langchain(monkeypatch, response_payload: dict[str, Any], captu
             captured["messages"] = messages
             return _Resp(response_payload)
 
-    langchain_core = types.ModuleType("langchain_core")
     langchain_messages = types.ModuleType("langchain.schema")
     langchain_messages.SystemMessage = _Message
     langchain_messages.HumanMessage = _Message
