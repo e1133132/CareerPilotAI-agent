@@ -9,9 +9,9 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from agents import study_planning
-from agents.participant import participant
-from config import settings
+from agents import study_planning   # noqa: E402
+from agents.participant import participant   # noqa: E402
+from config import settings   # noqa: E402
 
 
 def _install_fake_langchain(monkeypatch, *, llm_content: str) -> None:
