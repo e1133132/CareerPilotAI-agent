@@ -86,3 +86,35 @@ Subsequent runs reuse persisted vectors from Docker volume (`qdrant_storage`).
   - `resume_file`: PDF file (required)
   - `target_roles`: comma separated roles (optional)
 
+## Promptfoo AI Evals (Single-Point Prompt Stability, All Agents)
+
+This repo includes single-point prompt stability evals for all core agents:
+- `promptfoo/resume_analysis_promptfooconfig.yaml`
+- `promptfoo/job_matching_promptfooconfig.yaml`
+- `promptfoo/promptfooconfig.yaml` (skill_gap)
+- `promptfoo/study_planning_promptfooconfig.yaml`
+
+Run locally (requires `OPENAI_API_KEY`):
+
+```sh
+npx promptfoo@latest eval -c promptfoo/promptfooconfig.yaml
+npx promptfoo@latest eval -c promptfoo/resume_analysis_promptfooconfig.yaml
+npx promptfoo@latest eval -c promptfoo/job_matching_promptfooconfig.yaml
+npx promptfoo@latest eval -c promptfoo/study_planning_promptfooconfig.yaml
+```
+
+Optional HTML report:
+
+```sh
+npx promptfoo@latest view
+```
+
+## System API Stability Test (/run_partial)
+
+For system-level bias counterfactual stability, run:
+
+```sh
+python -m pytest tests/integration/test_run_partial_bias_stability.py -q
+python -m pytest tests/integration/test_run_bias_stability.py -q
+```
+
