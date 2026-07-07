@@ -57,6 +57,19 @@ class Settings:
     # Study plan RAG (retrieval from data/learning_resources.jsonl)
     STUDY_PLAN_RAG_TOP_K: int = int(os.getenv("STUDY_PLAN_RAG_TOP_K", "5"))
 
+    # Company-internal corpus branding (jobs + L&D library)
+    INTERNAL_COMPANY_NAME: str = os.getenv("INTERNAL_COMPANY_NAME", "CareerPilot")
+
+    # Optional web job search merged with internal job corpus
+    JOB_WEB_SEARCH_ENABLED: bool = os.getenv("JOB_WEB_SEARCH_ENABLED", "true").lower() == "true"
+    JOB_WEB_SEARCH_MAX_RESULTS: int = int(os.getenv("JOB_WEB_SEARCH_MAX_RESULTS", "5"))
+
+    # Optional web learning search (LangChain DuckDuckGo) merged into RAG corpus
+    STUDY_PLAN_WEB_SEARCH_ENABLED: bool = (
+        os.getenv("STUDY_PLAN_WEB_SEARCH_ENABLED", "true").lower() == "true"
+    )
+    STUDY_PLAN_WEB_SEARCH_MAX_RESULTS: int = int(os.getenv("STUDY_PLAN_WEB_SEARCH_MAX_RESULTS", "5"))
+
     # Qdrant vector store
     QDRANT_ENABLED: bool = os.getenv("QDRANT_ENABLED", "true").lower() == "true"
     QDRANT_URL: str = os.getenv("QDRANT_URL", "http://localhost:6333")
@@ -74,6 +87,52 @@ class Settings:
         "careerpilot_learning_resources",
     )
     QDRANT_INDEX_META_PATH: str = os.getenv("QDRANT_INDEX_META_PATH", "data/.qdrant_index_meta.json")
+
+    # Supervisor routing (Phase 1 agentic workflow)
+    SUPERVISOR_LOW_MATCH_THRESHOLD: float = float(os.getenv("SUPERVISOR_LOW_MATCH_THRESHOLD", "0.35"))
+    SUPERVISOR_SKIP_PLAN_ON_NO_HIGH_GAPS: bool = (
+        os.getenv("SUPERVISOR_SKIP_PLAN_ON_NO_HIGH_GAPS", "true").lower() == "true"
+    )
+
+    # Resume optimizer (Phase 2)
+    RESUME_OPTIMIZER_ENABLED: bool = os.getenv("RESUME_OPTIMIZER_ENABLED", "true").lower() == "true"
+    OPENAI_MODEL_RESUME_OPTIMIZER: str = os.getenv(
+        "OPENAI_MODEL_RESUME_OPTIMIZER",
+        os.getenv("OPENAI_MODEL_RESUME_ANALYSIS", "gpt-4o-mini"),
+    )
+    RESUME_OPTIMIZER_USER_MAX_CHARS: int = int(os.getenv("RESUME_OPTIMIZER_USER_MAX_CHARS", "20000"))
+
+    # Study plan on-demand RAG + function calling (Phase 2)
+    STUDY_PLAN_USE_FUNCTION_CALLING: bool = (
+        os.getenv("STUDY_PLAN_USE_FUNCTION_CALLING", "true").lower() == "true"
+    )
+    STUDY_PLAN_FC_MAX_TOOL_ROUNDS: int = int(os.getenv("STUDY_PLAN_FC_MAX_TOOL_ROUNDS", "2"))
+
+    # Apply strategist + user memory (Phase 3)
+    APPLY_STRATEGIST_ENABLED: bool = os.getenv("APPLY_STRATEGIST_ENABLED", "true").lower() == "true"
+    OPENAI_MODEL_APPLY_STRATEGIST: str = os.getenv(
+        "OPENAI_MODEL_APPLY_STRATEGIST",
+        os.getenv("OPENAI_MODEL_JOB_MATCHING", "gpt-4o-mini"),
+    )
+    APPLY_STRATEGIST_USER_MAX_CHARS: int = int(os.getenv("APPLY_STRATEGIST_USER_MAX_CHARS", "24000"))
+    USER_MEMORY_DIR: str = os.getenv("USER_MEMORY_DIR", "data/user_memory")
+    USER_MEMORY_MAX_RUN_HISTORY: int = int(os.getenv("USER_MEMORY_MAX_RUN_HISTORY", "20"))
+
+    # Auth (JWT accounts)
+    AUTH_ENABLED: bool = os.getenv("AUTH_ENABLED", "true").lower() == "true"
+    AUTH_REQUIRED: bool = os.getenv("AUTH_REQUIRED", "false").lower() == "true"
+    AUTH_JWT_SECRET: str = os.getenv("AUTH_JWT_SECRET", "careerpilot-dev-secret-change-me")
+    AUTH_JWT_ALGORITHM: str = os.getenv("AUTH_JWT_ALGORITHM", "HS256")
+    AUTH_JWT_EXPIRE_HOURS: int = int(os.getenv("AUTH_JWT_EXPIRE_HOURS", "168"))
+    AUTH_ACCOUNTS_PATH: str = os.getenv("AUTH_ACCOUNTS_PATH", "data/accounts.json")
+    AUTH_PASSWORD_ITERATIONS: int = int(os.getenv("AUTH_PASSWORD_ITERATIONS", "120000"))
+
+    # MySQL (Cloud SQL / local). When set, accounts + user_memory use SQL instead of JSON files.
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "")
+    DATABASE_AUTO_CREATE_TABLES: bool = os.getenv("DATABASE_AUTO_CREATE_TABLES", "true").lower() == "true"
+
+    # API pipeline driver
+    USE_LANGGRAPH_PIPELINE: bool = os.getenv("USE_LANGGRAPH_PIPELINE", "true").lower() == "true"
 
 
 settings = Settings()

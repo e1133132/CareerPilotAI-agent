@@ -4,20 +4,21 @@ import json
 
 from config import settings
 from .llm_utils import extract_json_block, safe_json_loads
-from tools.explainability import skill_gap_rationale
+from .supervisor import resolve_target_job
+from skills.explainability import skill_gap_rationale
 
 
 AGENT_ID = "skill_gap"
 AGENT_NAME = "Skill Gap Agent"
 DEFAULT_MODEL = settings.OPENAI_MODEL_SKILL_GAP
-TOOLS: list[str] = []
+SERVICES: list[str] = []
 
 
 def run(state: dict, *, model: str = DEFAULT_MODEL) -> dict:
     profile = state.get("candidate_profile") or {}
     evidence = state.get("resume_evidence") or {}
     matches = state.get("job_matches") or []
-    top_job = matches[0] if matches else {}
+    top_job = resolve_target_job(state)
 
     # Fallback when langchain is not installed: do a simple rule-based gap analysis.
     try:

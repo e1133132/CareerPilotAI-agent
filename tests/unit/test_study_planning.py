@@ -79,7 +79,11 @@ def test_study_plan_blocks_prompt_injection_like_output(monkeypatch) -> None:
         monkeypatch,
         llm_content=llm_content,
     )
-    monkeypatch.setattr(study_planning, "_load_kb_rows", lambda: ([], "test.jsonl"))
+    monkeypatch.setattr(
+        study_planning,
+        "_build_merged_resource_corpus",
+        lambda profile, gaps: ([], "test.jsonl", [], []),
+    )
     monkeypatch.setattr(study_planning, "retrieve_learning_context", lambda **kwargs: [])
     monkeypatch.setattr(study_planning, "get_embed_fn", lambda: None)
 
@@ -104,7 +108,11 @@ def test_study_plan_blocks_biasy_adversarial_output(monkeypatch) -> None:
         monkeypatch,
         llm_content=llm_content,
     )
-    monkeypatch.setattr(study_planning, "_load_kb_rows", lambda: ([], "test.jsonl"))
+    monkeypatch.setattr(
+        study_planning,
+        "_build_merged_resource_corpus",
+        lambda profile, gaps: ([], "test.jsonl", [], []),
+    )
     monkeypatch.setattr(study_planning, "retrieve_learning_context", lambda **kwargs: [])
     monkeypatch.setattr(study_planning, "get_embed_fn", lambda: None)
 
@@ -161,7 +169,11 @@ def test_study_plan_parses_fenced_json_response(monkeypatch) -> None:
 }
 ```"""
     _install_fake_langchain(monkeypatch, llm_content=llm_content)
-    monkeypatch.setattr(study_planning, "_load_kb_rows", lambda: ([], "test.jsonl"))
+    monkeypatch.setattr(
+        study_planning,
+        "_build_merged_resource_corpus",
+        lambda profile, gaps: ([], "test.jsonl", [], []),
+    )
     monkeypatch.setattr(study_planning, "retrieve_learning_context", lambda **kwargs: [])
     monkeypatch.setattr(study_planning, "get_embed_fn", lambda: None)
 
@@ -185,7 +197,11 @@ def test_study_plan_parses_fenced_json_response(monkeypatch) -> None:
 def test_study_plan_invalid_json_falls_back_to_raw_payload(monkeypatch) -> None:
     llm_content = "not-json-output-at-all"
     _install_fake_langchain(monkeypatch, llm_content=llm_content)
-    monkeypatch.setattr(study_planning, "_load_kb_rows", lambda: ([], "test.jsonl"))
+    monkeypatch.setattr(
+        study_planning,
+        "_build_merged_resource_corpus",
+        lambda profile, gaps: ([], "test.jsonl", [], []),
+    )
     monkeypatch.setattr(study_planning, "retrieve_learning_context", lambda **kwargs: [])
     monkeypatch.setattr(study_planning, "get_embed_fn", lambda: None)
 
@@ -201,6 +217,55 @@ def test_study_plan_invalid_json_falls_back_to_raw_payload(monkeypatch) -> None:
     assert sp["raw"] == llm_content
     assert "resources" in sp
     assert sp["resources"] == []
+
+
+def test_study_plan_merges_web_resources_into_rag(monkeypatch) -> None:
+    llm_content = (
+        '{"timeline_weeks": 4, "phases": [], "interview_prep": [], "portfolio_tips": [], "resources": []}'
+    )
+    _install_fake_langchain(monkeypatch, llm_content=llm_content)
+
+    local = [{"id": "lr-local", "title": "Local SQL", "content": "sql basics", "skills": ["SQL"]}]
+    web = [
+        {
+            "id": "web-1",
+            "title": "Web Kubernetes Course",
+            "content": "Learn k8s online",
+            "skills": ["Kubernetes"],
+            "source": "web",
+            "url": "https://example.com/k8s",
+        }
+    ]
+    merged = local + web
+
+    captured: dict[str, object] = {}
+
+    def _fake_retrieve(**kwargs):
+        captured.update(kwargs)
+        return [{**web[0], "score": 0.9, "score_method": "keyword"}]
+
+    monkeypatch.setattr(study_planning.settings, "STUDY_PLAN_USE_FUNCTION_CALLING", False)
+    monkeypatch.setattr(
+        study_planning,
+        "_build_merged_resource_corpus",
+        lambda profile, gaps: (merged, "test.jsonl", local, web),
+    )
+    monkeypatch.setattr(study_planning, "retrieve_learning_context", _fake_retrieve)
+    monkeypatch.setattr(study_planning, "get_embed_fn", lambda: None)
+
+    out = study_planning.run(
+        {
+            "candidate_profile": {"skills": ["Python"]},
+            "skill_gaps": {"missing_skills": [{"skill": "Kubernetes", "priority": "high"}]},
+        }
+    )
+    sp = out["study_plan"]
+
+    assert captured.get("force_in_memory") is True
+    assert len(captured.get("resources") or []) == 2
+    assert sp["rag_corpus_web_size"] == 1
+    assert sp["resources"][0].get("source") == "web"
+    assert sp["resources"][0].get("url") == "https://example.com/k8s"
 
 
 def test_study_plan_fallback_explainability_has_fallback_event(monkeypatch) -> None:

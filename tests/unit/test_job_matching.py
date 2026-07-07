@@ -6,6 +6,11 @@ import agents.job_matching as jm
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def _disable_web_job_search(monkeypatch) -> None:
+    monkeypatch.setattr(jm.settings, "JOB_WEB_SEARCH_ENABLED", False)
+
+
 def _make_jobs(n: int) -> list[dict[str, Any]]:
     return [
         {

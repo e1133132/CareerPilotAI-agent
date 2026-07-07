@@ -1,0 +1,16 @@
+{
+  "user_id": "ef9ebeb58bdb2ca1",
+  "preferred_target_roles": [],
+  "rejected_job_ids": [],
+  "saved_job_ids": [],
+  "run_history": [
+    {
+      "run_id": "76cb62d3164146bdb79853e8b75707d8",
+      "at": "2026-06-20T14:46:24.600155Z",
+      "selected_job_id": "jd-001",
+      "top_job_id": "jd-001",
+      "apply_top_priority": "jd-001"
+    }
+  ],
+  "updated_at": "2026-06-20T14:46:24.600155Z"
+}

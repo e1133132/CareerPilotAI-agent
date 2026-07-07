@@ -11,12 +11,12 @@ from typing import Any, Callable
 from config import settings
 from utils import debug
 
-from .jobs_dataset import load_jobs
-from .learning_rag import _item_text, load_learning_resources
+from skills.job_retrieval.dataset import load_jobs
+from skills.learning_rag.retrieval import _item_text, load_learning_resources
 
 
 def _project_root() -> Path:
-    return Path(__file__).resolve().parent.parent
+    return Path(__file__).resolve().parent.parent.parent
 
 
 def _default_jobs_path() -> Path:

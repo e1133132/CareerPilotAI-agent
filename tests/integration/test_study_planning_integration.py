@@ -33,7 +33,12 @@ def test_run_endpoint_filters_adversarial_study_plan(monkeypatch) -> None:
         return {"job_matches": [{"id": "jd-001", "title": "Backend Developer"}]}
 
     def _gap_runner(_state: dict) -> dict:
-        return {"skill_gaps": {"missing_skills": [{"skill": "Docker"}], "target_job": {"title": "Backend Developer"}}}
+        return {
+            "skill_gaps": {
+                "missing_skills": [{"skill": "Docker", "priority": "high"}],
+                "target_job": {"title": "Backend Developer"},
+            }
+        }
 
     def _plan_runner(_state: dict) -> dict:
         return {

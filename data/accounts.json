@@ -1,0 +1,10 @@
+{
+  "cbc": {
+    "user_id": "bfe83419e3224360",
+    "username": "cbc",
+    "email": null,
+    "password_hash": "c91d621801bd105b9210dcb9bc106c5d3323ce4ee9246effc1025e2968040cde",
+    "salt": "12b67593f12e5ca4f24af0833f7334b6",
+    "created_at": "2026-07-04T16:05:40.031871Z"
+  }
+}

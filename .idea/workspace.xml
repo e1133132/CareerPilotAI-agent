@@ -5,8 +5,32 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="01ce8863-4767-466c-9497-2f0f54d92e59" name="Changes" comment="fix push bug">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/unit/test_skill_gap.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_skill_gap.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/workflows/ci.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/ci.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agents/job_matching.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/job_matching.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agents/orchestrator.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/orchestrator.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agents/participant.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/participant.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agents/resume_analysis.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/resume_analysis.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agents/skill_gap.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/skill_gap.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agents/study_planning.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/study_planning.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api.py" beforeDir="false" afterPath="$PROJECT_DIR$/api.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/.qdrant_index_meta.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/.qdrant_index_meta.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/jobs.jsonl" beforeDir="false" afterPath="$PROJECT_DIR$/data/jobs.jsonl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/learning_resources.jsonl" beforeDir="false" afterPath="$PROJECT_DIR$/data/learning_resources.jsonl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/state.py" beforeDir="false" afterPath="$PROJECT_DIR$/state.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_job_matching.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_job_matching.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_study_planning.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/unit/test_study_planning.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/explainability.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/jobs_dataset.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/learning_rag.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/resume_io.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/semantic_match.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/vector_store_qdrant.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -41,7 +65,7 @@
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "xy",
+    "git-widget-placeholder": "cbc",
     "kotlin-language-version-configured": "true",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -51,6 +75,19 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="RunManager">
+    <configuration default="true" type="JetRunConfigurationType">
+      <module name="career_pilot_ai" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
+      <module name="career_pilot_ai" />
+      <option name="filePath" />
+      <method v="2" />
+    </configuration>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -68,6 +105,7 @@
       <updated>1774593091858</updated>
       <workItem from="1774593093391" duration="555000" />
       <workItem from="1776412331565" duration="338000" />
+      <workItem from="1782462499104" duration="43000" />
     </task>
     <task id="LOCAL-00001" summary="add skill_gap agent unit test and bias">
       <option name="closed" value="true" />
