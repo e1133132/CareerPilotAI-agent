@@ -23,11 +23,11 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Deploy backend to Cloud Run
+      - name: Deploy to Cloud Run
         run: |
           gcloud run deploy careerpilot-backend \
             --source . \
             --region asia-southeast1 \
-            --allow-unauthenticated \
-            --set-env-vars QDRANT_ENABLED=true,QDRANT_AUTO_START=false,DATABASE_AUTO_CREATE_TABLES=false,QDRANT_URL=https://db226c29-4fce-46cd-b978-26b0c6be57f2.us-west-1-0.aws.cloud.qdrant.io \
-            --update-secrets OPENAI_API_KEY=openai-api-key:latest,QDRANT_API_KEY=qdrant-api-key:latest
+            --project careerpilot-ai-493209 \
+            --add-cloudsql-instances careerpilot-ai-493209:asia-southeast1:careerpilot \
+            --set-env-vars QDRANT_ENABLED=true,QDRANT_AUTO_START=false,DATABASE_AUTO_CREATE_TABLES=false,QDRANT_URL=https://db226c29-4fce-46cd-b978-26b0c6be57f2.us-west-1-0.aws.cloud.qdrant.io,DATABASE_URL="${{ secrets.DATABASE_URL }}"
