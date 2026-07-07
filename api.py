@@ -206,14 +206,25 @@ def _response_payload_from_state(
     return payload
 
 
+def _background_warmup_qdrant() -> None:
+    """
+    Best-effort background warmup to avoid blocking container startup.
+    """
+    try:
+        warmup_qdrant_indexes(get_embed_fn())
+    except Exception:
+        # Warmup is optional; ignore failures here and continue serving traffic.
+        return
+
+
 @app.on_event("startup")
 def _startup_warmup() -> None:
     """
-    Best-effort: init SQL tables + warm up Qdrant indexes early.
+    Best-effort: init SQL tables + start Qdrant warmup asynchronously.
     """
     if settings.DATABASE_AUTO_CREATE_TABLES:
         init_database()
-    warmup_qdrant_indexes(get_embed_fn())
+    threading.Thread(target=_background_warmup_qdrant, daemon=True).start()
 
 
 def _output_keys_from_part_out(part_out: dict[str, Any]) -> list[str]:

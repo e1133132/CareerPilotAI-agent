@@ -29,5 +29,5 @@ jobs:
             --source . \
             --region asia-southeast1 \
             --allow-unauthenticated \
-            --set-env-vars QDRANT_ENABLED=true,QDRANT_URL=https://db226c29-4fce-46cd-b978-26b0c6be57f2.us-west-1-0.aws.cloud.qdrant.io \
+            --set-env-vars QDRANT_ENABLED=true,QDRANT_AUTO_START=false,QDRANT_URL=https://db226c29-4fce-46cd-b978-26b0c6be57f2.us-west-1-0.aws.cloud.qdrant.io \
             --update-secrets OPENAI_API_KEY=openai-api-key:latest,QDRANT_API_KEY=qdrant-api-key:latest
