@@ -36,7 +36,7 @@ def _cover_letter_draft(
     body_hook = hook_lines[0] if hook_lines else f"I am excited to apply for {title}."
 
     paragraphs = [
-        f"Dear Hiring Manager,",
+        "Dear Hiring Manager,",
         "",
         f"I am writing to express my interest in the {title} position at {company}. "
         f"{body_hook}",

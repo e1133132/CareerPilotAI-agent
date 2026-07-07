@@ -78,9 +78,9 @@ def pack_to_markdown(pack: dict[str, Any]) -> str:
 
 def pack_to_zip_bytes(pack: dict[str, Any]) -> bytes:
     job = pack.get("job") or {}
-    title = _safe_filename_part(str(job.get("title") or "role"))
-    company = _safe_filename_part(str(job.get("company") or "company"))
-    prefix = f"{company}_{title}" if company != "company" else title
+    # title = _safe_filename_part(str(job.get("title") or "role"))
+    # company = _safe_filename_part(str(job.get("company") or "company"))
+    
 
     resume_md = ["# Resume suggestions", ""]
     resume = pack.get("resume_section") or {}

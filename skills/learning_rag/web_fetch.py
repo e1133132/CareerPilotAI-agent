@@ -12,7 +12,6 @@ import json
 import re
 import warnings
 from typing import Any
-from urllib.parse import urlparse
 
 from config import settings
 
