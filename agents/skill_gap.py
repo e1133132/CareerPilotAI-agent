@@ -17,7 +17,6 @@ SERVICES: list[str] = []
 def run(state: dict, *, model: str = DEFAULT_MODEL) -> dict:
     profile = state.get("candidate_profile") or {}
     evidence = state.get("resume_evidence") or {}
-    matches = state.get("job_matches") or []
     top_job = resolve_target_job(state)
 
     # Fallback when langchain is not installed: do a simple rule-based gap analysis.

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import agents.resume_optimizer as ro
-import agents.supervisor as sup
 from skills.learning_rag import needs_external_resources
 
 

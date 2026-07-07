@@ -10,7 +10,7 @@ CareerPilot AI is a multi-agent system that helps job seekers analyze a resume, 
 uv sync
 uv run python main.py
 ```
-python -m uvicorn api:app --host 0.0.0.0 --port 8080 --reloa
+python -m uvicorn api:app --host 0.0.0.0 --port 8080 --reload
 Run API server:
 
 ```sh

@@ -43,7 +43,7 @@ jobs:
           pip install ruff
 
       - name: Lint with Ruff
-        run: ruff check api.py config.py tools tests security agents
+        run: ruff check api.py config.py skills tests security agents
 
   test:
     name: Unit Tests
