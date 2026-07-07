@@ -1,17 +1,17 @@
 from __future__ import annotations
 
-from tools import load_resume_text
+from skills import load_resume_text
 import os
 import json
 from config import settings
 from .llm_utils import extract_json_block, safe_json_loads
 from utils import debug
-from tools.explainability import resume_rationale_from_outputs
+from skills.explainability import resume_rationale_from_outputs
 
 AGENT_ID = "resume_analysis"
 AGENT_NAME = "Resume Analysis Agent"
 DEFAULT_MODEL = settings.OPENAI_MODEL_RESUME_ANALYSIS
-TOOLS = ["load_resume_text"]
+SERVICES = ["load_resume_text"]
 
 
 

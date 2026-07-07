@@ -10,7 +10,7 @@ CareerPilot AI is a multi-agent system that helps job seekers analyze a resume, 
 uv sync
 uv run python main.py
 ```
-
+python -m uvicorn api:app --host 0.0.0.0 --port 8080 --reload
 Run API server:
 
 ```sh
@@ -65,10 +65,27 @@ Subsequent runs reuse persisted vectors from Docker volume (`qdrant_storage`).
 - Skill Gap Agent: compares profile vs job requirements to identify gaps (prioritized).
 - Study Planning Agent: produces a learning roadmap with timeline + project ideas (optional **RAG** from `data/learning_resources.jsonl`).
 
+## Skills layer (reusable capabilities)
+
+Reusable logic lives in **`skills/`** — each subfolder is a capability package with `SKILL.md`, scripts, and resource references. Agents stay thin and import skills instead of duplicating retrieval, memory, or RAG code.
+
+See [`skills/README.md`](skills/README.md) for the full map (resume parsing, job retrieval, vector store, learning RAG, user memory, application pack, explainability).
+
+### Application Pack (human-in-the-loop apply)
+
+After resume tips (and optionally apply strategy) complete, download tailored materials:
+
+- `GET /api/careerpilot/session/{run_id}/application_pack?format=json|markdown|zip`
+- Optional `job_id` query param to target a specific role from the run
+
+ZIP includes cover letter, follow-up email, resume suggestions, checklist, and `pack.json`.
+
 ## Data
 
-- `data/jobs.jsonl` contains sample job descriptions you can extend.
-- `data/learning_resources.jsonl` contains learning snippets for **study plan RAG** (retrieval + LLM). Add lines to expand the knowledge base. Override path with env `LEARNING_RESOURCES_PATH`. Tune `STUDY_PLAN_RAG_TOP_K` (default `5`).
+- `data/jobs.jsonl` — **CareerPilot internal** sample reqs (`[CareerPilot Internal] …`, `source: internal`). Optional **web jobs** merged when `JOB_WEB_SEARCH_ENABLED=true`.
+- `data/learning_resources.jsonl` — **CareerPilot L&D** internal library + optional web learning via study plan RAG.
+- Override company label: `INTERNAL_COMPANY_NAME=CareerPilot`
+- Tune `STUDY_PLAN_RAG_TOP_K` (default `5`), `JOB_WEB_SEARCH_MAX_RESULTS` (default `5`).
 
 ## Qdrant Vector Search
 

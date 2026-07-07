@@ -19,12 +19,22 @@ class State(TypedDict, total=False):
     job_matches: Optional[list[dict[str, Any]]]
     skill_gaps: Optional[dict[str, Any]]
     study_plan: Optional[dict[str, Any]]
+    resume_suggestions: Optional[dict[str, Any]]
+    apply_strategy: Optional[dict[str, Any]]
+    application_pack: Optional[dict[str, Any]]
+    user_memory: Optional[dict[str, Any]]
+    user_id: Optional[str]
 
     # orchestration
     next_agent: Optional[str]
-    stage: str  # intake -> resume -> match -> gap -> plan -> done
+    stage: str  # intake -> resume -> match -> gap -> optimize -> plan -> apply -> done
+    routing_decision: Optional[dict[str, Any]]
+    skip_study_plan: Optional[bool]
+    session_memory: Optional[dict[str, Any]]
 
-    # explainability (optional; assembled in api pipeline)
+    # pipeline / run metadata
+    run_id: Optional[str]
     pipeline_trace: Optional[list[dict[str, Any]]]
     fallback_events: Optional[list[dict[str, Any]]]
+    account_username: Optional[str]
 

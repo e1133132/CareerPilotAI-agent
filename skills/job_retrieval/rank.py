@@ -57,7 +57,7 @@ def rank_jobs_semantic(
         os.getenv("ALLOW_LOCAL_EMBEDDING_FALLBACK", "false").lower() == "true"
     )
     try:
-        from .vector_store_qdrant import search_jobs as qdrant_search_jobs
+        from skills.vector_store.qdrant import search_jobs as qdrant_search_jobs
 
         qdrant_hits = qdrant_search_jobs(query=query, top_k=top_k, embed_fn=embed_fn)
         if qdrant_hits:

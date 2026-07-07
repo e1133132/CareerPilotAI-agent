@@ -103,10 +103,14 @@ def retrieve_learning_context(
     embed_fn: Any | None,
     top_k: int = 5,
     dataset_path: str | None = None,
+    force_in_memory: bool = False,
 ) -> list[dict[str, Any]]:
     """
     Retrieve top-k learning resource snippets by embedding similarity, else keyword overlap.
     Each item should have at least: id, title, content; optional skills, resource_hints.
+
+    When force_in_memory is True (e.g. merged local + web corpus), skip Qdrant and rank the
+    provided resources list directly.
     """
     top_k = max(1, int(top_k))
     if not resources:
@@ -116,23 +120,24 @@ def retrieve_learning_context(
         os.getenv("ALLOW_LOCAL_EMBEDDING_FALLBACK", "false").lower() == "true"
     )
 
-    # Prefer Qdrant persisted vector search when available.
-    try:
-        from .vector_store_qdrant import search_learning_resources
+    # Prefer Qdrant persisted vector search when available (local indexed corpus only).
+    if not force_in_memory:
+        try:
+            from skills.vector_store.qdrant import search_learning_resources
 
-        qdrant_hits = search_learning_resources(
-            query=query,
-            top_k=top_k,
-            embed_fn=embed_fn,
-            dataset_path=dataset_path,
-        )
-        if qdrant_hits:
-            return qdrant_hits
-    except Exception as e:
-        import warnings
+            qdrant_hits = search_learning_resources(
+                query=query,
+                top_k=top_k,
+                embed_fn=embed_fn,
+                dataset_path=dataset_path,
+            )
+            if qdrant_hits:
+                return qdrant_hits
+        except Exception as e:
+            import warnings
 
-        mode = "local embedding" if allow_local_embedding_fallback else "keyword fallback"
-        warnings.warn(f"Qdrant learning search failed, using {mode}: {e}", stacklevel=1)
+            mode = "local embedding" if allow_local_embedding_fallback else "keyword fallback"
+            warnings.warn(f"Qdrant learning search failed, using {mode}: {e}", stacklevel=1)
 
     # Qdrant may be unavailable or return empty results; skip the very slow local embedding path by default.
     if (not allow_local_embedding_fallback) or embed_fn is None:
@@ -191,9 +196,13 @@ def format_rag_context_for_prompt(snippets: list[dict[str, Any]]) -> str:
             hints = [hints]
         content = (s.get("content") or "").strip()
         hint_line = ", ".join(str(h) for h in hints) if hints else ""
+        source = str(s.get("source") or "local")
+        url = str(s.get("url") or "").strip()
+        url_line = f"URL: {url}\n" if url else ""
         blocks.append(
-            f"--- Snippet [{i}] id={sid} score={s.get('score', 0):.4f} ({s.get('score_method', '')}) ---\n"
+            f"--- Snippet [{i}] id={sid} source={source} score={s.get('score', 0):.4f} ({s.get('score_method', '')}) ---\n"
             f"Title: {title}\n"
+            f"{url_line}"
             f"Related skills: {', '.join(str(x) for x in skills)}\n"
             f"Content:\n{content}\n"
             f"Suggested resource types / hints: {hint_line}"
