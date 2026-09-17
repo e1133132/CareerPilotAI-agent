@@ -4,6 +4,7 @@ import json
 import os
 
 from config import settings
+from observability.tracing import maybe_wrap_openai
 
 
 _SYSTEM = """You are an API safety classifier for a career-coaching product.
@@ -67,7 +68,7 @@ def llm_input_is_unsafe(user_text: str) -> bool:
     except Exception:
         return False
 
-    client = OpenAI(api_key=api_key, timeout=settings.INPUT_GUARD_LLM_TIMEOUT_SECONDS)
+    client = maybe_wrap_openai(OpenAI(api_key=api_key, timeout=settings.INPUT_GUARD_LLM_TIMEOUT_SECONDS))
 
     model = settings.INPUT_GUARD_LLM_MODEL
     try:

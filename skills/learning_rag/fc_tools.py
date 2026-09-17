@@ -3,7 +3,10 @@ from __future__ import annotations
 import json
 from typing import Any
 
+import time
+
 from config import settings
+from observability.metrics import metrics_store
 from skills.learning_rag.retrieval import (
     build_study_rag_query,
     format_rag_context_for_prompt,
@@ -209,13 +212,29 @@ Decide whether external learning resources are needed for the candidate's skill 
             args = tc.get("args") if isinstance(tc, dict) else getattr(tc, "args", {}) or {}
             tool_call_id = tc.get("id") if isinstance(tc, dict) else getattr(tc, "id", "")
             tool = tool_map.get(str(name))
+            tool_start = time.perf_counter()
             if not tool:
                 result = f"Unknown tool: {name}"
+                metrics_store.record_tool_call(
+                    str(name or "unknown"),
+                    success=False,
+                    duration_ms=round((time.perf_counter() - tool_start) * 1000, 2),
+                )
             else:
                 try:
                     result = tool.invoke(args)
+                    metrics_store.record_tool_call(
+                        str(name),
+                        success=True,
+                        duration_ms=round((time.perf_counter() - tool_start) * 1000, 2),
+                    )
                 except Exception as exc:  # noqa: BLE001
                     result = f"Tool error: {exc}"
+                    metrics_store.record_tool_call(
+                        str(name),
+                        success=False,
+                        duration_ms=round((time.perf_counter() - tool_start) * 1000, 2),
+                    )
             messages.append(ToolMessage(content=str(result), tool_call_id=str(tool_call_id)))
 
     # Deduplicate snippets by id/title

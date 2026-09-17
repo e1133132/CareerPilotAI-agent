@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 
 from config import settings
-from .llm_utils import extract_json_block, safe_json_loads
+from .llm_utils import create_chat_openai, extract_json_block, safe_json_loads
 from .supervisor import resolve_target_job
 from skills.explainability import skill_gap_rationale
 
@@ -79,7 +79,8 @@ Output ONLY JSON:
         {"candidate_profile": profile, "resume_evidence": evidence, "target_job": top_job},
         ensure_ascii=False,
     )
-    llm = ChatOpenAI(
+    llm = create_chat_openai(
+        "skill_gap",
         model=model,
         temperature=settings.OPENAI_TEMPERATURE,
         request_timeout=settings.OPENAI_REQUEST_TIMEOUT_SECONDS,

@@ -4,7 +4,7 @@ from skills import load_resume_text
 import os
 import json
 from config import settings
-from .llm_utils import extract_json_block, safe_json_loads
+from .llm_utils import create_chat_openai, extract_json_block, safe_json_loads
 from utils import debug
 from skills.explainability import resume_rationale_from_outputs
 
@@ -148,7 +148,8 @@ JSON SCHEMA:
     debug(f"OPENAI_API_KEY exists: {bool(api_key)}", "resume_analysis")
     debug(f"resume_text preview: {(resume_text or '')[:2000]}", "resume_analysis")
 
-    llm = ChatOpenAI(
+    llm = create_chat_openai(
+        "resume_analysis",
         model=model,
         temperature=0,
         api_key=api_key,

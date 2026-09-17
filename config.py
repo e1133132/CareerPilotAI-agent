@@ -17,6 +17,7 @@ class Settings:
     OPENAI_MODEL_JOB_MATCHING: str = os.getenv("OPENAI_MODEL_JOB_MATCHING", "gpt-5-nano")
     OPENAI_MODEL_SKILL_GAP: str = os.getenv("OPENAI_MODEL_SKILL_GAP", "gpt-5-nano")
     OPENAI_MODEL_STUDY_PLANNING: str = os.getenv("OPENAI_MODEL_STUDY_PLANNING", "gpt-5-nano")
+    OPENAI_MODEL_EVALUATOR: str = os.getenv("OPENAI_MODEL_EVALUATOR", "gpt-4o-mini")
 
     # Reduce input size to lower latency and avoid request timeouts.
     RESUME_ANALYSIS_RESUME_TEXT_MAX_CHARS: int = int(
@@ -127,12 +128,22 @@ class Settings:
     AUTH_ACCOUNTS_PATH: str = os.getenv("AUTH_ACCOUNTS_PATH", "data/accounts.json")
     AUTH_PASSWORD_ITERATIONS: int = int(os.getenv("AUTH_PASSWORD_ITERATIONS", "120000"))
 
+    # Observability (logging, metrics, LangSmith tracing)
+    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+    LOG_JSON: bool = os.getenv("LOG_JSON", "false").lower() == "true"
+    METRICS_ENDPOINT_ENABLED: bool = os.getenv("METRICS_ENDPOINT_ENABLED", "true").lower() == "true"
+    # LangSmith (preferred: LANGSMITH_*; legacy LANGCHAIN_* still supported in tracing.py)
+    LANGSMITH_PROJECT: str = os.getenv("LANGSMITH_PROJECT", os.getenv("LANGCHAIN_PROJECT", "careerpilot-ai"))
+    LANGSMITH_API_KEY: str = os.getenv("LANGSMITH_API_KEY", os.getenv("LANGCHAIN_API_KEY", ""))
+    LANGSMITH_WORKSPACE_ID: str = os.getenv("LANGSMITH_WORKSPACE_ID", "")
+    # Cloud Run: false ensures traces flush before handler exit (langsmith-trace skill).
+    LANGCHAIN_CALLBACKS_BACKGROUND: bool = (
+        os.getenv("LANGCHAIN_CALLBACKS_BACKGROUND", "false").lower() == "true"
+    )
+
     # MySQL (Cloud SQL / local). When set, accounts + user_memory use SQL instead of JSON files.
     DATABASE_URL: str = os.getenv("DATABASE_URL", "")
     DATABASE_AUTO_CREATE_TABLES: bool = os.getenv("DATABASE_AUTO_CREATE_TABLES", "true").lower() == "true"
-
-    # API pipeline driver
-    USE_LANGGRAPH_PIPELINE: bool = os.getenv("USE_LANGGRAPH_PIPELINE", "true").lower() == "true"
 
 
 settings = Settings()

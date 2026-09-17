@@ -18,7 +18,7 @@ from skills.learning_rag import (
     run_rag_tool_loop,
 )
 from skills.explainability import learning_rag_fallback_event, study_plan_rationale
-from .llm_utils import extract_json_block, get_embed_fn, safe_json_loads
+from .llm_utils import create_chat_openai, extract_json_block, get_embed_fn, safe_json_loads
 
 
 AGENT_ID = "study_planning"
@@ -250,7 +250,8 @@ Output ONLY JSON:
 }
 """
 
-    llm = ChatOpenAI(
+    llm = create_chat_openai(
+        "study_planning",
         model=model,
         temperature=settings.OPENAI_TEMPERATURE,
         request_timeout=settings.OPENAI_REQUEST_TIMEOUT_SECONDS,

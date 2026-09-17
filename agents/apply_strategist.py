@@ -5,6 +5,7 @@ import os
 from typing import Any
 
 from config import settings
+from .llm_utils import create_chat_openai, extract_json_block, safe_json_loads
 from .supervisor import resolve_target_job
 from skills.user_memory import filter_jobs_by_memory
 
@@ -145,7 +146,8 @@ Output ONLY JSON:
     }
     user = json.dumps(user_payload, ensure_ascii=False)[: settings.APPLY_STRATEGIST_USER_MAX_CHARS]
 
-    llm = ChatOpenAI(
+    llm = create_chat_openai(
+        "apply_strategist",
         model=model,
         temperature=settings.OPENAI_TEMPERATURE,
         request_timeout=settings.OPENAI_REQUEST_TIMEOUT_SECONDS,
@@ -155,8 +157,6 @@ Output ONLY JSON:
     )
     resp = llm.invoke([SystemMessage(content=system), HumanMessage(content=user)])
     raw = str(resp.content).strip()
-
-    from .llm_utils import extract_json_block, safe_json_loads
 
     payload: Any = safe_json_loads(raw)
     if payload is None:

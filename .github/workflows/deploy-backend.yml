@@ -30,4 +30,4 @@ jobs:
             --region asia-southeast1 \
             --project careerpilot-ai-493209 \
             --add-cloudsql-instances careerpilot-ai-493209:asia-southeast1:careerpilot \
-            --set-env-vars QDRANT_ENABLED=true,QDRANT_AUTO_START=false,DATABASE_AUTO_CREATE_TABLES=false,QDRANT_URL=https://db226c29-4fce-46cd-b978-26b0c6be57f2.us-west-1-0.aws.cloud.qdrant.io,DATABASE_URL="${{ secrets.DATABASE_URL }}"
+            --set-env-vars QDRANT_ENABLED=true,QDRANT_AUTO_START=false,DATABASE_AUTO_CREATE_TABLES=false,QDRANT_URL=https://db226c29-4fce-46cd-b978-26b0c6be57f2.us-west-1-0.aws.cloud.qdrant.io,DATABASE_URL="${{ secrets.DATABASE_URL }}",LANGSMITH_TRACING=true,LANGSMITH_PROJECT=careerpilot-ai,LANGCHAIN_CALLBACKS_BACKGROUND=false,LANGSMITH_API_KEY="${{ secrets.LANGSMITH_API_KEY }}"

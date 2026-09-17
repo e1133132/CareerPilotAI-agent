@@ -8,56 +8,19 @@ before the next orchestrator/participant cycle continues.
 from __future__ import annotations
 
 import time
-from datetime import datetime, timezone
 from functools import lru_cache
 from typing import Any, Literal
 
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
 
-from agents import orchestrator, participant, summarizer
+from langsmith import traceable
+
+from agents import orchestrator, participant
 from agents.supervisor import evaluate_after_gap, merge_routing_decision
-from config import settings
+from pipeline.trace import append_trace_for_step
 from skills.application_pack import build_application_pack
 from state import State
-
-
-def _output_keys_from_part_out(part_out: dict[str, Any]) -> list[str]:
-    return sorted(k for k in part_out if k != "messages" and not str(k).startswith("_"))
-
-
-def _append_trace_for_step(
-    state: dict[str, Any],
-    *,
-    stage: str,
-    agent_id: str,
-    part_out: dict[str, Any],
-    t0: float,
-    t1: float,
-) -> None:
-    step = dict(part_out.pop("_step_explainability", None) or {})
-    keys = _output_keys_from_part_out(part_out)
-    trace = list(state.get("pipeline_trace") or [])
-    fallback_events = list(state.get("fallback_events") or [])
-    trace.append(
-        {
-            "stage": stage,
-            "agent": agent_id,
-            "summary": step.get("summary") or (f"Updated: {', '.join(keys)}" if keys else "step complete"),
-            "rationale": step.get("rationale") or "",
-            "output_keys": keys,
-            "duration_ms": round((t1 - t0) * 1000, 2),
-            "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-        }
-    )
-    state["pipeline_trace"] = trace
-    fe = step.get("fallback_event")
-    if isinstance(fe, dict):
-        fallback_events.append(fe)
-    for extra in step.get("fallback_events") or []:
-        if isinstance(extra, dict):
-            fallback_events.append(extra)
-    state["fallback_events"] = fallback_events
 
 
 def orchestrator_node(state: State) -> dict[str, Any]:
@@ -72,7 +35,7 @@ def participant_node(state: State) -> dict[str, Any]:
     t1 = time.perf_counter()
 
     merged = dict(state)
-    _append_trace_for_step(merged, stage=stage, agent_id=next_agent, part_out=part_out, t0=t0, t1=t1)
+    append_trace_for_step(merged, stage=stage, agent_id=next_agent, part_out=part_out, t0=t0, t1=t1)
     merged.update(part_out)
     return {**part_out, "pipeline_trace": merged.get("pipeline_trace"), "fallback_events": merged.get("fallback_events")}
 
@@ -177,6 +140,7 @@ def graph_finished(state: dict[str, Any]) -> bool:
     return bool(state.get("application_pack"))
 
 
+@traceable(run_type="chain", name="run_graph_step")
 def run_graph_step(*, thread_id: str, initial: dict[str, Any] | None = None) -> dict[str, Any]:
     """Invoke one graph segment until the next interrupt (after participant) or END."""
     graph = get_api_graph()
@@ -217,6 +181,7 @@ def patch_graph_state(*, thread_id: str, patch: dict[str, Any]) -> dict[str, Any
 
 
 def build_report_text(state: dict[str, Any]) -> str:
+    from agents import summarizer
     from security.output_filter import filter_report_text
 
     return filter_report_text(summarizer(state))

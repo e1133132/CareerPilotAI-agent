@@ -5,7 +5,7 @@ import os
 from typing import Any
 
 from config import settings
-from .llm_utils import extract_json_block, safe_json_loads
+from .llm_utils import create_chat_openai, extract_json_block, safe_json_loads
 from .supervisor import resolve_target_job
 from skills.explainability import resume_rationale_from_outputs
 
@@ -100,7 +100,8 @@ Output ONLY JSON:
         ensure_ascii=False,
     )
 
-    llm = ChatOpenAI(
+    llm = create_chat_openai(
+        "resume_optimizer",
         model=model,
         temperature=0,
         request_timeout=settings.OPENAI_REQUEST_TIMEOUT_SECONDS,
@@ -215,7 +216,8 @@ Output ONLY JSON:
         ensure_ascii=False,
     )
 
-    llm = ChatOpenAI(
+    llm = create_chat_openai(
+        "resume_optimizer",
         model=model,
         temperature=settings.OPENAI_TEMPERATURE,
         request_timeout=settings.OPENAI_REQUEST_TIMEOUT_SECONDS,

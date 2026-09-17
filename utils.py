@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import os
+import logging
 
 
 def debug(message, prefix="DEBUG"):
     if os.getenv("DEBUG", "false").lower() == "true":
-        print(f"    \033[2m[{prefix}] {message}\033[0m")
-
+        logging.getLogger(prefix.lower()).debug(message)

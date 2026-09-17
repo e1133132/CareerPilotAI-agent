@@ -25,7 +25,7 @@ def test_run_endpoint_success_with_mocked_pipeline(monkeypatch) -> None:
     def _fake_extract_pdf_text(_: bytes) -> str:
         return "Python SQL React"
 
-    def _fake_run_pipeline(_: dict) -> dict:
+    def _fake_run_sync(*, initial_state: dict) -> dict:
         return {
             "state": {
                 "candidate_profile": {"name": "Test User", "skills": ["Python", "SQL"]},
@@ -38,7 +38,7 @@ def test_run_endpoint_success_with_mocked_pipeline(monkeypatch) -> None:
         }
 
     monkeypatch.setattr(api, "_extract_pdf_text", _fake_extract_pdf_text)
-    monkeypatch.setattr(api, "_run_pipeline", _fake_run_pipeline)
+    monkeypatch.setattr(api, "run_sync", _fake_run_sync)
 
     files = {"resume_file": ("resume.pdf", b"%PDF-1.4 dummy", "application/pdf")}
     data = {"target_roles": "Data Analyst,Backend Developer"}
@@ -56,23 +56,27 @@ def test_run_endpoint_success_with_mocked_pipeline(monkeypatch) -> None:
 
 
 def test_run_partial_endpoint_returns_run_id(monkeypatch) -> None:
-    # Make sure resume extraction is fast/deterministic in tests.
     def _fake_extract_pdf_text(_: bytes) -> str:
         return "Python SQL React"
 
-    # Only run up to gap: return partial state immediately.
-    def _fake_run_pipeline_until_gap(_: dict) -> dict:
-        return {
-            "stage": "gap",
-            "messages": [],
-            "candidate_profile": {"name": "Test User", "skills": ["Python", "SQL"]},
-            "resume_evidence": {"skills": []},
-            "job_matches": [{"id": "jd-001", "title": "Junior Data Analyst"}],
-            "skill_gaps": {"missing_skills": [{"skill": "Docker"}]},
-        }
+    def _fake_start_partial_run(*, initial_state: dict) -> tuple[str, dict, str, str, str]:
+        return (
+            initial_state["run_id"],
+            {
+                "stage": "gap",
+                "messages": [],
+                "candidate_profile": {"name": "Test User", "skills": ["Python", "SQL"]},
+                "resume_evidence": {"skills": []},
+                "job_matches": [{"id": "jd-001", "title": "Junior Data Analyst"}],
+                "skill_gaps": {"missing_skills": [{"skill": "Docker"}]},
+            },
+            "pending",
+            "pending",
+            "pending",
+        )
 
     monkeypatch.setattr(api, "_extract_pdf_text", _fake_extract_pdf_text)
-    monkeypatch.setattr(api, "_run_pipeline_until_gap", _fake_run_pipeline_until_gap)
+    monkeypatch.setattr(api, "start_partial_run", _fake_start_partial_run)
 
     files = {"resume_file": ("resume.pdf", b"%PDF-1.4 dummy", "application/pdf")}
     data = {"target_roles": "Data Analyst"}

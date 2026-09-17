@@ -10,12 +10,10 @@ client = TestClient(api.app)
 
 def test_run_partial_bias_counterfactual_is_stable(monkeypatch) -> None:
     def _fake_extract_pdf_text(raw_bytes: bytes) -> str:
-        # Treat uploaded bytes as already extracted text for deterministic tests.
         return raw_bytes.decode("utf-8")
 
-    def _fake_run_pipeline_until_gap(state: dict) -> dict:
-        # Stable behavior: only professional skill signals influence output.
-        resume_text = (state.get("resume_text") or "").lower()
+    def _fake_start_partial_run(*, initial_state: dict) -> tuple[str, dict, str, str, str]:
+        resume_text = (initial_state.get("resume_text") or "").lower()
         skills = []
         if "python" in resume_text:
             skills.append("Python")
@@ -24,34 +22,39 @@ def test_run_partial_bias_counterfactual_is_stable(monkeypatch) -> None:
 
         required = ["Python", "SQL", "Docker"]
         missing = [s for s in required if s not in skills]
-        return {
-            "stage": "gap",
-            "messages": [],
-            "candidate_profile": {"name": "Test User", "skills": skills},
-            "resume_evidence": {"skills": []},
-            "job_matches": [{"id": "jd-001", "title": "Backend Engineer", "skills_required": required}],
-            "skill_gaps": {
-                "target_job": {"id": "jd-001", "title": "Backend Engineer"},
-                "matched_strengths": [s for s in skills if s in required],
-                "missing_skills": [
-                    {
-                        "skill": s,
-                        "priority": "high",
-                        "reason": "Listed in job requirements but not found in resume skills.",
-                    }
-                    for s in missing
-                ],
-                "notes": [],
+        return (
+            initial_state["run_id"],
+            {
+                "stage": "gap",
+                "messages": [],
+                "candidate_profile": {"name": "Test User", "skills": skills},
+                "resume_evidence": {"skills": []},
+                "job_matches": [{"id": "jd-001", "title": "Backend Engineer", "skills_required": required}],
+                "skill_gaps": {
+                    "target_job": {"id": "jd-001", "title": "Backend Engineer"},
+                    "matched_strengths": [s for s in skills if s in required],
+                    "missing_skills": [
+                        {
+                            "skill": s,
+                            "priority": "high",
+                            "reason": "Listed in job requirements but not found in resume skills.",
+                        }
+                        for s in missing
+                    ],
+                    "notes": [],
+                },
             },
-        }
+            "pending",
+            "pending",
+            "pending",
+        )
 
-    def _fake_finish_study_plan(_run_id: str) -> None:
-        # Avoid long async background work / external calls during this test.
+    def _fake_finish_run_background(_run_id: str) -> None:
         return None
 
     monkeypatch.setattr(api, "_extract_pdf_text", _fake_extract_pdf_text)
-    monkeypatch.setattr(api, "_run_pipeline_until_gap", _fake_run_pipeline_until_gap)
-    monkeypatch.setattr(api, "_finish_study_plan", _fake_finish_study_plan)
+    monkeypatch.setattr(api, "start_partial_run", _fake_start_partial_run)
+    monkeypatch.setattr(api, "finish_run_background", _fake_finish_run_background)
 
     base_resume_text = "Python SQL projects and internship experience."
     sensitive_variant = (

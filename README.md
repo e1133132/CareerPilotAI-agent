@@ -58,6 +58,10 @@ This now starts both app + Qdrant by default. The first run will auto-index:
 
 Subsequent runs reuse persisted vectors from Docker volume (`qdrant_storage`).
 
+## Architecture
+
+See [`ARCHITECTURE.md`](ARCHITECTURE.md) for layer boundaries (API → pipeline → LangGraph → agents → skills).
+
 ## What it does (agents)
 
 - Resume Analysis Agent: extracts skills/education/experience into a structured profile + evidence.
@@ -100,8 +104,9 @@ ZIP includes cover letter, follow-up email, resume suggestions, checklist, and `
 ## API endpoint
 
 - `POST /api/careerpilot/run` (multipart/form-data) — response includes **`explainability`** (`pipeline_trace` with per-step `rationale`, `fallback_events`, `limitations`) alongside existing fields.
-  - `resume_file`: PDF file (required)
+  - `resume_file`: PDF or DOCX file (required)
   - `target_roles`: comma separated roles (optional)
+  - For scanned/image-based PDFs: OCR fallback is attempted (requires `pypdfium2` + `rapidocr-onnxruntime`).
 
 ## Promptfoo AI Evals (Single-Point Prompt Stability, All Agents)
 

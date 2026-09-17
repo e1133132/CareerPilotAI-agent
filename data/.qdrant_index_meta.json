@@ -1,16 +1,16 @@
 {
   "jobs_index": {
     "file": "C:\\Users\\lenovo\\Desktop\\Master_Course\\AI\\Practice Module-CareerPilot\\CareerPilot_AI\\career_pilot_ai\\data\\jobs.jsonl",
-    "file_hash": "21cf142b6f8a1e363d26be93dd484eb79f06b2dab61c65ab23f4e90e753cb811",
+    "file_hash": "043e92d23f3bb80b27eee21d0e74915b72db3b3a6764b02f61e3e83c43958db5",
     "model": "text-embedding-3-small",
     "count": 24,
-    "updated_at": 1783178356
+    "updated_at": 1788240822
   },
   "learning_index": {
     "file": "C:\\Users\\lenovo\\Desktop\\Master_Course\\AI\\Practice Module-CareerPilot\\CareerPilot_AI\\career_pilot_ai\\data\\learning_resources.jsonl",
-    "file_hash": "597d9cbdfc493591b2691067ed17325b86360314be3122bde8f5b578dba8abd9",
+    "file_hash": "cc01ec90645aa7f704fc720fe62b61d7aff67d1e1ec2f6afbc5bdd0517e78569",
     "model": "text-embedding-3-small",
     "count": 29,
-    "updated_at": 1783175364
+    "updated_at": 1788240831
   }
 }

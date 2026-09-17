@@ -12,8 +12,8 @@ def test_run_bias_counterfactual_is_stable(monkeypatch) -> None:
     def _fake_extract_pdf_text(raw_bytes: bytes) -> str:
         return raw_bytes.decode("utf-8")
 
-    def _fake_run_pipeline(state: dict) -> dict:
-        resume_text = (state.get("resume_text") or "").lower()
+    def _fake_run_sync(*, initial_state: dict) -> dict:
+        resume_text = (initial_state.get("resume_text") or "").lower()
         skills = []
         if "python" in resume_text:
             skills.append("Python")
@@ -49,7 +49,7 @@ def test_run_bias_counterfactual_is_stable(monkeypatch) -> None:
         return {"state": final_state, "report_text": "ok"}
 
     monkeypatch.setattr(api, "_extract_pdf_text", _fake_extract_pdf_text)
-    monkeypatch.setattr(api, "_run_pipeline", _fake_run_pipeline)
+    monkeypatch.setattr(api, "run_sync", _fake_run_sync)
 
     base_resume_text = "Python SQL projects and internship experience."
     sensitive_variant = (

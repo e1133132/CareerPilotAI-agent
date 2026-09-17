@@ -9,8 +9,13 @@ duckduckgo-search>=7.0.0
 ddgs>=9.0.0
 langchain-core>=1.2.22
 langgraph>=0.6.6
+langsmith>=0.3.0
 numpy>=2.0.0
 pypdf
+python-docx
+ftfy
+pypdfium2
+rapidocr-onnxruntime
 qdrant-client>=1.12.1
 python-dotenv>=1.1.1
 python-multipart>=0.0.20
