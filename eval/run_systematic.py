@@ -123,6 +123,24 @@ def evaluate_case(case: dict[str, Any], *, skip_judge: bool = False) -> dict[str
         "field_scores": field_scores,
         "judge": judge_verdict,
         "pass": overall_pass,
+        "error": None,
+    }
+
+
+def _error_row(case: dict[str, Any], exc: BaseException) -> dict[str, Any]:
+    return {
+        "id": str(case.get("id") or ""),
+        "description": case.get("description"),
+        "agent": str(case.get("agent") or ""),
+        "output": {},
+        "field_scores": {
+            "field_pass": False,
+            "primary_metric": "error",
+            "primary_value": 0.0,
+        },
+        "judge": {},
+        "pass": False,
+        "error": f"{type(exc).__name__}: {exc}",
     }
 
 
@@ -139,8 +157,21 @@ def run_suite(
         cases = load_cases(file_path)
         print(f"\n=== {file_path.name} ({len(cases)} cases) ===", flush=True)
         for case in cases:
-            print(f"  Evaluating {case.get('id')} …", flush=True)
-            results.append(evaluate_case(case, skip_judge=skip_judge))
+            case_id = case.get("id")
+            print(f"  Evaluating {case_id} …", flush=True)
+            try:
+                row = evaluate_case(case, skip_judge=skip_judge)
+            except Exception as exc:  # noqa: BLE001 — keep suite running across cases
+                print(f"  ERROR {case_id}: {type(exc).__name__}: {exc}", flush=True)
+                row = _error_row(case, exc)
+            else:
+                scores = row.get("field_scores") or {}
+                metric = scores.get("primary_metric") or "metric"
+                value = scores.get("primary_value")
+                value_s = f"{float(value):.2%}" if isinstance(value, (int, float)) else str(value)
+                status = "PASS" if row.get("pass") else "FAIL"
+                print(f"  {status} {case_id}: {metric}={value_s}", flush=True)
+            results.append(row)
 
     if output_path is not None:
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -163,6 +194,7 @@ def _print_summary(
         return 1
 
     pass_n = sum(1 for r in results if r.get("pass"))
+    err_n = sum(1 for r in results if r.get("error"))
     by_agent: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for row in results:
         by_agent[str(row.get("agent") or "unknown")].append(row)
@@ -170,16 +202,26 @@ def _print_summary(
     print("\n=== Summary ===")
     print(f"Cases: {n}")
     print(f"Overall pass: {pass_n}/{n} ({100 * pass_n / n:.1f}%)")
+    if err_n:
+        print(f"Errors (exception): {err_n}/{n}")
+        for row in results:
+            if row.get("error"):
+                print(f"  - {row.get('id')}: {row.get('error')}")
     for agent, rows in sorted(by_agent.items()):
         a_pass = sum(1 for r in rows if r.get("pass"))
-        primary_vals = [
-            float((r.get("field_scores") or {}).get("primary_value") or 0.0) for r in rows
-        ]
-        avg_primary = sum(primary_vals) / len(primary_vals)
-        metric_name = (rows[0].get("field_scores") or {}).get("primary_metric") or "primary"
-        print(
-            f"  {agent}: {a_pass}/{len(rows)} pass | avg {metric_name}={avg_primary:.2%}"
-        )
+        a_err = sum(1 for r in rows if r.get("error"))
+        scored = [r for r in rows if not r.get("error")]
+        if scored:
+            primary_vals = [
+                float((r.get("field_scores") or {}).get("primary_value") or 0.0) for r in scored
+            ]
+            avg_primary = sum(primary_vals) / len(primary_vals)
+            metric_name = (scored[0].get("field_scores") or {}).get("primary_metric") or "primary"
+            extra = f" | avg {metric_name}={avg_primary:.2%}"
+        else:
+            extra = ""
+        err_note = f" | errors={a_err}" if a_err else ""
+        print(f"  {agent}: {a_pass}/{len(rows)} pass{extra}{err_note}")
         if not skip_judge:
             j_pass = sum(1 for r in rows if r.get("judge") and r["judge"].get("pass"))
             print(f"    judge pass: {j_pass}/{len(rows)}")

@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import importlib.util
 import json
 import logging
 import os
 import re
+import sys
 import time
 from typing import Any, Callable
 
@@ -11,6 +13,19 @@ from config import settings
 from observability.tracing import maybe_wrap_openai
 
 logger = logging.getLogger(__name__)
+
+
+def langchain_available() -> bool:
+    """True when langchain_core + langchain_openai can be imported."""
+    for name in ("langchain_core", "langchain_openai"):
+        try:
+            if importlib.util.find_spec(name) is None:
+                return False
+        except ValueError:
+            # Unit tests may inject stub modules without a proper __spec__.
+            if name not in sys.modules:
+                return False
+    return True
 
 
 def safe_json_loads(text: str) -> Any | None:

@@ -43,7 +43,6 @@ from workflow_graph import latest_step_message
 from observability import (
     metrics_store,
     RequestMetricsMiddleware,
-    set_run_id,
     setup_logging,
     setup_tracing,
 )

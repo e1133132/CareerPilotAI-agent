@@ -4,7 +4,7 @@ from skills import load_resume_text
 import os
 import json
 from config import settings
-from .llm_utils import create_chat_openai, extract_json_block, safe_json_loads
+from .llm_utils import create_chat_openai, extract_json_block, langchain_available, safe_json_loads
 from utils import debug
 from skills.explainability import resume_rationale_from_outputs
 
@@ -25,12 +25,8 @@ def run(state: dict, *, model: str = DEFAULT_MODEL) -> dict:
         else:
             raise ValueError("No resume provided. Please input a resume path or paste resume text.")
 
-    try:
-        from langchain_core.messages import HumanMessage, SystemMessage
-        from langchain_openai import ChatOpenAI
-        debug("LangChain imports OK", "resume_analysis")
-    except ModuleNotFoundError as e:
-        debug(f"LangChain imports failed: {str(e)}", "resume_analysis")
+    if not langchain_available():
+        debug("LangChain imports failed: langchain not available", "resume_analysis")
 
         profile = {
             "name": "",
@@ -63,6 +59,10 @@ def run(state: dict, *, model: str = DEFAULT_MODEL) -> dict:
                 },
             },
         }
+
+    from langchain_core.messages import HumanMessage, SystemMessage
+
+    debug("LangChain imports OK", "resume_analysis")
 
     system = """You are the Resume Analysis Agent for CareerPilot AI.
 

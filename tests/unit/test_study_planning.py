@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import builtins
 import sys
 import types
 from pathlib import Path
@@ -42,14 +41,7 @@ def _install_fake_langchain(monkeypatch, *, llm_content: str) -> None:
 
 
 def test_study_plan_fallback_mode_uses_missing_skills(monkeypatch) -> None:
-    real_import = builtins.__import__
-
-    def _fake_import(name, *args, **kwargs):
-        if name in ("langchain_core.messages", "langchain_openai"):
-            raise ModuleNotFoundError(name)
-        return real_import(name, *args, **kwargs)
-
-    monkeypatch.setattr(builtins, "__import__", _fake_import)
+    monkeypatch.setattr(study_planning, "langchain_available", lambda: False)
 
     state = {
         "candidate_profile": {"headline": "Junior Data Analyst"},
@@ -127,14 +119,7 @@ def test_study_plan_blocks_biasy_adversarial_output(monkeypatch) -> None:
 
 
 def test_study_plan_fallback_output_contract_shape(monkeypatch) -> None:
-    real_import = builtins.__import__
-
-    def _fake_import(name, *args, **kwargs):
-        if name in ("langchain_core.messages", "langchain_openai"):
-            raise ModuleNotFoundError(name)
-        return real_import(name, *args, **kwargs)
-
-    monkeypatch.setattr(builtins, "__import__", _fake_import)
+    monkeypatch.setattr(study_planning, "langchain_available", lambda: False)
 
     out = study_planning.run(
         {
@@ -269,14 +254,7 @@ def test_study_plan_merges_web_resources_into_rag(monkeypatch) -> None:
 
 
 def test_study_plan_fallback_explainability_has_fallback_event(monkeypatch) -> None:
-    real_import = builtins.__import__
-
-    def _fake_import(name, *args, **kwargs):
-        if name in ("langchain_core.messages", "langchain_openai"):
-            raise ModuleNotFoundError(name)
-        return real_import(name, *args, **kwargs)
-
-    monkeypatch.setattr(builtins, "__import__", _fake_import)
+    monkeypatch.setattr(study_planning, "langchain_available", lambda: False)
 
     out = study_planning.run(
         {

@@ -18,7 +18,7 @@ from skills.learning_rag import (
     run_rag_tool_loop,
 )
 from skills.explainability import learning_rag_fallback_event, study_plan_rationale
-from .llm_utils import create_chat_openai, extract_json_block, get_embed_fn, safe_json_loads
+from .llm_utils import create_chat_openai, extract_json_block, get_embed_fn, langchain_available, safe_json_loads
 
 
 AGENT_ID = "study_planning"
@@ -127,10 +127,7 @@ def run(state: dict, *, model: str = DEFAULT_MODEL) -> dict:
     profile = state.get("candidate_profile") or {}
 
     # Fallback when langchain is not installed: generate a minimal deterministic plan.
-    try:
-        from langchain_core.messages import HumanMessage, SystemMessage
-        from langchain_openai import ChatOpenAI  
-    except ModuleNotFoundError:
+    if not langchain_available():
         missing = gaps.get("missing_skills") or []
         skills = [m.get("skill") for m in missing if isinstance(m, dict) and m.get("skill")]
         skills = [str(s) for s in skills][:10]
@@ -202,6 +199,8 @@ def run(state: dict, *, model: str = DEFAULT_MODEL) -> dict:
                 },
             },
         }
+
+    from langchain_core.messages import HumanMessage, SystemMessage
 
     system = """You are the Study Planning Agent.
 

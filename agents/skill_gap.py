@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 
 from config import settings
-from .llm_utils import create_chat_openai, extract_json_block, safe_json_loads
+from .llm_utils import create_chat_openai, extract_json_block, langchain_available, safe_json_loads
 from .supervisor import resolve_target_job
 from skills.explainability import skill_gap_rationale
 
@@ -20,10 +20,7 @@ def run(state: dict, *, model: str = DEFAULT_MODEL) -> dict:
     top_job = resolve_target_job(state)
 
     # Fallback when langchain is not installed: do a simple rule-based gap analysis.
-    try:
-        from langchain_core.messages import HumanMessage, SystemMessage
-        from langchain_openai import ChatOpenAI
-    except ModuleNotFoundError:
+    if not langchain_available():
         cand_skills = set((profile.get("skills") or []))
         req_skills = set((top_job.get("skills_required") or []))
         missing = sorted([s for s in req_skills if s not in cand_skills])
@@ -50,6 +47,8 @@ def run(state: dict, *, model: str = DEFAULT_MODEL) -> dict:
                 },
             },
         }
+
+    from langchain_core.messages import HumanMessage, SystemMessage
 
     system = """You are the Skill Gap Agent.
 

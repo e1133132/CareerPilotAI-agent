@@ -20,15 +20,7 @@ def test_needs_external_resources_skips_trivial() -> None:
 
 def test_resume_optimizer_template_fallback(monkeypatch) -> None:
     monkeypatch.setattr(ro.settings, "RESUME_OPTIMIZER_ENABLED", True)
-
-    def _fake_import(name, *args, **kwargs):
-        if name in ("langchain_core.messages", "langchain_openai"):
-            raise ModuleNotFoundError(name)
-        return __import__(name, *args, **kwargs)
-
-    import builtins
-
-    monkeypatch.setattr(builtins, "__import__", _fake_import)
+    monkeypatch.setattr(ro, "langchain_available", lambda: False)
 
     state = {
         "candidate_profile": {

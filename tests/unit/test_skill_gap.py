@@ -7,17 +7,9 @@ import agents.skill_gap as sg
 
 def _run_rule_based(monkeypatch, state: dict[str, Any]) -> dict[str, Any]:
     """
-    Force Skill Gap Agent to use rule-based fallback by making langchain imports fail.
-    This avoids real OpenAI calls in unit tests.
+    Force Skill Gap Agent to use rule-based fallback (no live OpenAI calls).
     """
-    original_import = __import__
-
-    def _fake_import(name, globals=None, locals=None, fromlist=(), level=0):
-        if name in {"langchain.schema", "langchain_openai"}:
-            raise ModuleNotFoundError(name)
-        return original_import(name, globals, locals, fromlist, level)
-
-    monkeypatch.setattr("builtins.__import__", _fake_import)
+    monkeypatch.setattr(sg, "langchain_available", lambda: False)
     return sg.run(state)
 
 

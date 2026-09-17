@@ -5,7 +5,7 @@ import os
 from typing import Any
 
 from config import settings
-from .llm_utils import create_chat_openai, extract_json_block, safe_json_loads
+from .llm_utils import create_chat_openai, extract_json_block, langchain_available, safe_json_loads
 from .supervisor import resolve_target_job
 from skills.explainability import resume_rationale_from_outputs
 
@@ -58,11 +58,10 @@ def _template_suggestions(profile: dict[str, Any], target_job: dict[str, Any]) -
 
 def _reflect_and_fix(payload: dict[str, Any], profile: dict[str, Any], *, model: str) -> dict[str, Any]:
     """One lightweight reflect pass: reject fabricated employers/roles."""
-    try:
-        from langchain_core.messages import HumanMessage, SystemMessage
-        from langchain_openai import ChatOpenAI
-    except ModuleNotFoundError:
+    if not langchain_available():
         return payload
+
+    from langchain_core.messages import HumanMessage, SystemMessage
 
     known_companies = {
         str(e.get("company") or "").strip().lower()
@@ -165,10 +164,7 @@ def run(state: dict, *, model: str = DEFAULT_MODEL) -> dict:
             },
         }
 
-    try:
-        from langchain_core.messages import HumanMessage, SystemMessage
-        from langchain_openai import ChatOpenAI
-    except ModuleNotFoundError:
+    if not langchain_available():
         payload = _template_suggestions(profile, target_job)
         return {
             "resume_suggestions": payload,
@@ -184,6 +180,8 @@ def run(state: dict, *, model: str = DEFAULT_MODEL) -> dict:
                 },
             },
         }
+
+    from langchain_core.messages import HumanMessage, SystemMessage
 
     system = """You are the Resume Optimizer Agent for CareerPilot AI.
 

@@ -5,7 +5,7 @@ import os
 from typing import Any
 
 from config import settings
-from .llm_utils import create_chat_openai, extract_json_block, safe_json_loads
+from .llm_utils import create_chat_openai, extract_json_block, langchain_available, safe_json_loads
 from .supervisor import resolve_target_job
 from skills.user_memory import filter_jobs_by_memory
 
@@ -94,10 +94,7 @@ def run(state: dict, *, model: str = DEFAULT_MODEL) -> dict:
             },
         }
 
-    try:
-        from langchain_core.messages import HumanMessage, SystemMessage
-        from langchain_openai import ChatOpenAI
-    except ModuleNotFoundError:
+    if not langchain_available():
         payload = _template_strategy(state)
         return {
             "apply_strategy": payload,
@@ -113,6 +110,8 @@ def run(state: dict, *, model: str = DEFAULT_MODEL) -> dict:
                 },
             },
         }
+
+    from langchain_core.messages import HumanMessage, SystemMessage
 
     system = """You are the Apply Strategist Agent for CareerPilot AI.
 

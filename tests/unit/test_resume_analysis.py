@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import builtins
 import json
 import sys
 import types
@@ -115,16 +114,7 @@ def test_run_uses_extract_json_block_when_wrapped_output(monkeypatch) -> None:
 
 
 def test_run_fallback_mode_when_langchain_unavailable(monkeypatch) -> None:
-    original_import = builtins.__import__
-
-    def _fake_import(name, globals=None, locals=None, fromlist=(), level=0):
-        if name in {"langchain_core.messages", "langchain_openai"}:
-            raise ModuleNotFoundError(name)
-        return original_import(name, globals, locals, fromlist, level)
-
-    monkeypatch.setattr(builtins, "__import__", _fake_import)
-    monkeypatch.delitem(sys.modules, "langchain_core.messages", raising=False)
-    monkeypatch.delitem(sys.modules, "langchain_openai", raising=False)
+    monkeypatch.setattr(ra, "langchain_available", lambda: False)
 
     out = ra.run({"resume_text": "Resume text"})
 
